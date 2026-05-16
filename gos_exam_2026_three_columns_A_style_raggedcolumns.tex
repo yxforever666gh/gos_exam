@@ -1,0 +1,2805 @@
+
+\documentclass[a4paper]{article}
+\usepackage{fontspec}
+\usepackage{polyglossia}
+\setmainlanguage{russian}
+\setotherlanguage{english}
+\setmainfont{DejaVu Serif}
+\setsansfont{DejaVu Sans}
+\setmonofont{DejaVu Sans Mono}
+\usepackage{amsmath,amssymb,mathtools}
+\usepackage{adjustbox}
+\usepackage[a4paper,portrait,left=4mm,right=4mm,top=4mm,bottom=5mm]{geometry}
+\usepackage{multicol}
+\usepackage{microtype}
+\usepackage{ragged2e}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{xcolor}
+\usepackage{array,booktabs,longtable}
+\setlength{\fboxsep}{0.9pt}
+\pagestyle{empty}
+% 6.6pt 是为了三栏版面和公式可读性设置的紧凑字号。
+% 若要严格采用 Word 五号（约 10.5pt），可把下一行改为 \fontsize{10.5pt}{12pt}\selectfont。
+\newcommand{\BodyFont}{\fontsize{6.6pt}{7.15pt}\selectfont}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.10em}
+\setlength{\columnsep}{3.2mm}
+\setlength{\columnseprule}{0.15pt}
+\setlength{\multicolsep}{0pt}
+\setlength{\premulticols}{0pt}
+\setlength{\postmulticols}{0pt}
+\setlength{\abovedisplayskip}{0.015em plus 0.01em minus 0.01em}
+\setlength{\belowdisplayskip}{0.015em plus 0.01em minus 0.01em}
+\setlength{\abovedisplayshortskip}{0em plus 0.01em minus 0em}
+\setlength{\belowdisplayshortskip}{0em plus 0.01em minus 0em}
+\setlength{\jot}{0.035em}
+\setlist{itemsep=0.04em,topsep=0.04em,leftmargin=1em}
+\allowdisplaybreaks
+\raggedbottom
+\sloppy
+\emergencystretch=1.5em
+\setcounter{secnumdepth}{0}
+\setcounter{tocdepth}{0}
+\titleformat{\section}{\bfseries\fontsize{8.0pt}{8.6pt}\selectfont\raggedright}{ }{0pt}{}
+\titlespacing*{\section}{0pt}{0.28em}{0.10em}
+\titleformat{\subsection}{\bfseries\fontsize{7.15pt}{7.7pt}\selectfont\raggedright}{ }{0pt}{}
+\titlespacing*{\subsection}{0pt}{0.24em}{0.08em}
+\titleformat{\subsubsection}{\bfseries\fontsize{6.8pt}{7.2pt}\selectfont\raggedright}{ }{0pt}{}
+\titlespacing*{\subsubsection}{0pt}{0.25em}{0.08em}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\eps}{\varepsilon}
+\newcommand{\T}{\top}
+\newcommand{\dd}{\,d}
+\newcommand{\norm}[1]{\left\lVert #1\right\rVert}
+\newcommand{\inner}[2]{\left\langle #1,#2\right\rangle}
+\newcommand{\Lie}{\operatorname{Lie}}
+\newcommand{\Vect}{\operatorname{Vec}}
+\newcommand{\rank}{\operatorname{rank}}
+\newcommand{\ad}{\operatorname{ad}}
+\newcommand{\sgn}{\operatorname{sgn}}
+\newcommand{\sng}{\mathrm{sng}}
+\newcommand{\PV}{\mathrm{PV}}
+\newcommand{\CV}{\mathrm{CV}}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
+
+% Display formulas are constrained to the column width; normally they keep natural size,
+% and only overlong formulas are scaled down. This prevents formulas crossing column rules; vertical display spacing is minimized.
+\newenvironment{fitdisplay}{%
+  \[\begin{adjustbox}{max width=\linewidth,center}$\displaystyle
+}{%
+  $\end{adjustbox}\]
+}
+\newcommand{\Argmax}{\operatorname*{Arg\,max}}
+\newcommand{\ticket}[2]{\section*{Билет #1. #2}}
+\newcommand{\official}[1]{\subsection*{Официальная формулировка}\textbf{#1}}
+\newcounter{blockcounter}
+\newcommand{\blocktitle}[3]{%
+  \par\ifnum\value{blockcounter}>0\columnbreak\fi\stepcounter{blockcounter}%
+  {\bfseries\fontsize{8.0pt}{8.6pt}\selectfont Блок #1. #2}\par
+  {\bfseries #3}\par\vspace{0.18em}%
+}
+\begin{document}
+\BodyFont
+\RaggedRight
+\begin{multicols}{3}
+\raggedcolumns
+\blocktitle{A}{Обратные задачи и метод динамической регуляризации}{Билеты 1--3. Краткая версия для запоминания}
+
+\section*{Билет 1. Обратные задачи для систем ОДУ. Метод динамической регуляризации}
+
+Рассматривается система
+\begin{fitdisplay}
+\dot y(t)=f(t,y(t))u(t)+g(t,y(t)),\qquad y(0)=y_0,\qquad 0\le t\le T,
+\end{fitdisplay}
+где \(y(t)\in\mathbb R^n\), \(u(t)\in P\subset\mathbb R^r\),
+\begin{fitdisplay}
+U=\{u(\cdot)\in L_2^r(0,T):u(t)\in P\ \text{п.в.}\}.
+\end{fitdisplay}
+
+\textbf{Прямая задача:} по заданному \(u(\cdot)\) найти \(y(\cdot)\).  
+\textbf{Обратная задача:} по наблюдаемой траектории \(y(\cdot)\) восстановить \(u(\cdot)\).
+
+Обратная задача некорректна: управление может быть неединственным и неустойчивым относительно ошибок наблюдения. Поэтому вводится \textbf{нормальное управление}:
+\begin{fitdisplay}
+u_*=\operatorname*{arg\,min}\{\|u\|_{L_2^r(0,T)}:\ y(t,u)=y^r(t),\ 0\le t\le T\}.
+\end{fitdisplay}
+
+На практике известны дискретные наблюдения:
+\begin{fitdisplay}
+|\tilde y_i-y^r(t_i)|\le \delta,\qquad
+0=t_0<t_1<\cdots<t_N=T,\qquad
+h=\max_i(t_{i+1}-t_i).
+\end{fitdisplay}
+
+Метод динамической регуляризации строит кусочно-постоянное управление
+\begin{fitdisplay}
+\tilde u_{\delta,h}(t)=u_i,\qquad t\in[t_i,t_{i+1}),\qquad u_i\in P.
+\end{fitdisplay}
+
+Вводится траектория-поводырь:
+\begin{fitdisplay}
+z_0=\tilde y_0,\qquad
+\frac{z_{i+1}-z_i}{t_{i+1}-t_i}
+=f(t_i,\tilde y_i)u_i+g(t_i,\tilde y_i).
+\end{fitdisplay}
+
+На каждом шаге \(u_i\) выбирается из регуляризованной задачи:
+\begin{fitdisplay}
+T_i(v)=
+2\left\langle z_i-\tilde y_i,\,
+f(t_i,\tilde y_i)v+g(t_i,\tilde y_i)
+\right\rangle+\alpha |v|^2
+\to \min_{v\in P},
+\end{fitdisplay}
+\begin{fitdisplay}
+T_i(u_i)\le \inf_{v\in P}T_i(v)+\varepsilon.
+\end{fitdisplay}
+
+Член \(\alpha|v|^2\) --- стабилизатор Тихонова; он подавляет неустойчивость и обеспечивает стремление к управлению минимальной нормы.
+
+При согласованном стремлении
+\begin{fitdisplay}
+\alpha,\delta,h,\varepsilon\to0,\qquad
+\frac{\delta+h+\varepsilon}{\alpha}\to0,
+\end{fitdisplay}
+имеем
+\begin{fitdisplay}
+z_h\to y^r \quad \text{в } C[0,T],
+\qquad
+\tilde u_{\delta,h}\to u_* \quad \text{в } L_2^r(0,T).
+\end{fitdisplay}
+
+\textbf{Ключевая фраза:} метод динамической регуляризации заменяет некорректное восстановление управления устойчивой пошаговой процедурой с поводырём и стабилизатором Тихонова.
+
+\section*{Билет 2. Обратные задачи для параболических уравнений}
+
+Типичный пример --- уравнение теплопроводности:
+\begin{fitdisplay}
+\begin{cases}
+y_t(t,x)=a^2y_{xx}(t,x)+u(t,x), &(t,x)\in(0,T)\times(0,l),\\
+y(t,0)=y(t,l)=0,\\
+y(0,x)=y_0(x).
+\end{cases}
+\end{fitdisplay}
+
+\textbf{Прямая задача:} по \(u(t,x)\) найти \(y(t,x)\).  
+\textbf{Обратная задача:} по наблюдениям \(y(t,x)\) восстановить правую часть \(u(t,x)\).
+
+Используется гильбертов тройник:
+\begin{fitdisplay}
+V=H_0^1(0,l),\qquad H=L_2(0,l),\qquad
+V\subset H\simeq H^*\subset V^*.
+\end{fitdisplay}
+
+Оператор
+\begin{fitdisplay}
+A:V\to V^*
+\end{fitdisplay}
+задаётся слабой формой:
+\begin{fitdisplay}
+\langle Ay,v\rangle_{V^*,V}
+=
+a^2\int_0^l y_xv_x\,dx.
+\end{fitdisplay}
+
+Тогда уравнение записывается как
+\begin{fitdisplay}
+\dot y(t)+Ay(t)=u(t),\qquad y(0)=y_0.
+\end{fitdisplay}
+
+Слабое решение:
+\begin{fitdisplay}
+y\in L_2(0,T;V),\qquad \dot y\in L_2(0,T;V^*),
+\qquad y\in C([0,T];H).
+\end{fitdisplay}
+
+Допустимые управления:
+\begin{fitdisplay}
+U=\{u\in L_2(0,T;H):u(t)\in P\ \text{п.в.}\},
+\end{fitdisplay}
+где \(P\subset H\) выпукло, замкнуто и ограничено.
+
+Нормальное управление:
+\begin{fitdisplay}
+u_*=\operatorname*{arg\,min}\{\|u\|_{L_2(0,T;H)}:\ y(t,u)=y^r(t)\}.
+\end{fitdisplay}
+
+Наблюдения:
+\begin{fitdisplay}
+\|y^r(t_i)-\tilde y_i\|_H\le\delta,\qquad
+h=\max_i(t_{i+1}-t_i).
+\end{fitdisplay}
+
+Метод строит кусочно-постоянное управление:
+\begin{fitdisplay}
+\tilde u_{\delta,h}(t)=u_i,\qquad t\in[t_i,t_{i+1}),\qquad u_i\in P.
+\end{fitdisplay}
+
+Поводырь:
+\begin{fitdisplay}
+\dot z_h(t)+Az_h(t)=u_i,\qquad t\in(t_i,t_{i+1}).
+\end{fitdisplay}
+
+На шаге \(i\):
+\begin{fitdisplay}
+\varphi_i(v)=
+2\langle z_h(t_i)-\tilde y_i,v\rangle_H+\alpha\|v\|_H^2
+\to\min_{v\in P},
+\end{fitdisplay}
+\begin{fitdisplay}
+\varphi_i(u_i)\le \inf_{v\in P}\varphi_i(v)+\varepsilon.
+\end{fitdisplay}
+
+При согласованном стремлении параметров к нулю:
+\begin{fitdisplay}
+z_h\to y^r \quad \text{в } C([0,T];H),
+\qquad
+\tilde u_{\delta,h}\to u_* \quad \text{в } L_2(0,T;H).
+\end{fitdisplay}
+
+\textbf{Важно:} в параболическом случае нельзя смешивать \(L_2\)-скалярное произведение и двойственность \(V^*,V\). Оператор \(A\) корректно задаётся как \(A:V\to V^*\).
+
+\textbf{Замечание:} точная форма оценок по \(h,\delta,\varepsilon,\alpha\) требует сверки с оригинальным текстом.
+
+\section*{Билет 3. Обратные задачи для гиперболических уравнений}
+
+Типичный пример --- волновое уравнение:
+\begin{fitdisplay}
+\begin{cases}
+y_{tt}(t,x)=a^2y_{xx}(t,x)+u(t,x), &(t,x)\in(0,T)\times(0,l),\\
+y(t,0)=y(t,l)=0,\\
+y(0,x)=y_0(x),\\
+y_t(0,x)=y_1(x).
+\end{cases}
+\end{fitdisplay}
+
+\textbf{Прямая задача:} по \(u(t,x)\) найти \(y(t,x)\).  
+\textbf{Обратная задача:} по наблюдениям \(y\) или \(y_t\) восстановить \(u(t,x)\).
+
+Главное отличие от параболического случая: уравнение второго порядка по времени, поэтому состояние есть пара
+\begin{fitdisplay}
+X(t)=(y(t),\dot y(t)).
+\end{fitdisplay}
+
+Пространства:
+\begin{fitdisplay}
+V=H_0^1(0,l),\qquad H=L_2(0,l),\qquad
+V\subset H\simeq H^*\subset V^*.
+\end{fitdisplay}
+
+Оператор:
+\begin{fitdisplay}
+\langle Ay,v\rangle_{V^*,V}
+=
+a^2\int_0^l y_xv_x\,dx.
+\end{fitdisplay}
+
+Абстрактная форма:
+\begin{fitdisplay}
+\ddot y(t)+Ay(t)=u(t),
+\qquad
+y(0)=y_0,\quad \dot y(0)=y_1.
+\end{fitdisplay}
+
+Энергетический класс решений:
+\begin{fitdisplay}
+y\in C([0,T];V),\qquad
+\dot y\in C([0,T];H).
+\end{fitdisplay}
+
+Нормальное управление:
+\begin{fitdisplay}
+u_*=\operatorname*{arg\,min}\{\|u\|_{L_2(0,T;H)}:\ y(t,u)=y^r(t)\}.
+\end{fitdisplay}
+
+Если наблюдается скорость, то данные имеют вид
+\begin{fitdisplay}
+\|\dot y^r(t_i)-\tilde w_i\|_H\le\delta.
+\end{fitdisplay}
+Если наблюдается состояние, то
+\begin{fitdisplay}
+\|y^r(t_i)-\tilde y_i\|_H\le\delta.
+\end{fitdisplay}
+В ответе важно не смешивать эти два типа наблюдений.
+
+Метод динамической регуляризации строит
+\begin{fitdisplay}
+\tilde u_{\delta,h}(t)=u_i,\qquad t\in[t_i,t_{i+1}),\qquad u_i\in P.
+\end{fitdisplay}
+
+Поводырь удовлетворяет второму порядку:
+\begin{fitdisplay}
+\ddot z_h(t)+Az_h(t)=u_i,\qquad t\in(t_i,t_{i+1}).
+\end{fitdisplay}
+
+Если наблюдается скорость, то типичная регуляризованная задача:
+\begin{fitdisplay}
+\varphi_i(v)
+=
+2\langle \dot z_h(t_i)-\tilde w_i,v\rangle_H
++
+\alpha\|v\|_H^2
+\to\min_{v\in P},
+\end{fitdisplay}
+\begin{fitdisplay}
+\varphi_i(u_i)\le \inf_{v\in P}\varphi_i(v)+\varepsilon.
+\end{fitdisplay}
+
+Стабилизатор Тихонова \(\alpha\|v\|_H^2\) обеспечивает устойчивость и выбор нормального решения.
+
+При согласованном стремлении параметров к нулю:
+\begin{fitdisplay}
+(z_h,\dot z_h)\to (y^r,\dot y^r)
+\end{fitdisplay}
+в соответствующей энергетической норме, а
+\begin{fitdisplay}
+\tilde u_{\delta,h}\to u_*
+\quad\text{в }L_2(0,T;H).
+\end{fitdisplay}
+
+\textbf{Ключевое отличие:} для гиперболического уравнения сходимость надо формулировать не только для \(y\), а для пары \((y,\dot y)\) в энергетическом пространстве.
+
+\textbf{Замечание:} точная форма алгоритма и оценок зависит от того, что именно наблюдается: \(y\), \(\dot y\) или оба компонента. Это требует сверки с оригинальным источником.
+
+\section*{Общая схема блока A}
+
+\begin{fitdisplay}
+\begin{gathered}
+\text{некорректная обратная задача}\Rightarrow\text{нормальное управление}\\
+\Rightarrow\text{дискретные наблюдения}\Rightarrow\text{поводырь}\\
+\Rightarrow\text{регуляризованная минимизация}\\
+\Rightarrow\text{сходимость к нормальному управлению}.
+\end{gathered}
+\end{fitdisplay}
+
+
+\blocktitle{B}{Экономический рост и оптимальное управление}{Билеты 4--8. Краткая версия для запоминания}
+
+\section*{Билет 4. Одномерная модель Рамсея. Cobb--Douglas. Особый режим}
+
+Модель: капитал $x(t)>0$, управление $u(t)\in[0,1]$ -- доля выпуска, идущая в инвестиции. Доля $1-u(t)$ идет в потребление.
+\begin{fitdisplay}
+\dot x=uF(x)-\mu x,\qquad x(0)=x_0>0,
+\end{fitdisplay}
+\begin{fitdisplay}
+F(x)=Ax^\varepsilon,\qquad A>0,\quad 0<\varepsilon<1.
+\end{fitdisplay}
+Функционал на бесконечном горизонте:
+\begin{fitdisplay}
+J[u]=\int_0^\infty e^{-\nu t}(1-u(t))F(x(t))\,dt\to\max .
+\end{fitdisplay}
+
+Гамильтониан:
+\begin{fitdisplay}
+H=e^{-\nu t}(1-u)F(x)+\psi\bigl(uF(x)-\mu x\bigr).
+\end{fitdisplay}
+Коэффициент при $u$:
+\begin{fitdisplay}
+F(x)(\psi-e^{-\nu t}).
+\end{fitdisplay}
+Поэтому функция переключения:
+\begin{fitdisplay}
+\Phi(t)=\psi(t)-e^{-\nu t}.
+\end{fitdisplay}
+\begin{fitdisplay}
+\Phi>0\Rightarrow u=1,\qquad \Phi<0\Rightarrow u=0.
+\end{fitdisplay}
+
+В текущих переменных
+\begin{fitdisplay}
+p(t)=e^{\nu t}\psi(t),
+\end{fitdisplay}
+текущий гамильтониан:
+\begin{fitdisplay}
+M=(1-u)F(x)+p(uF(x)-\mu x).
+\end{fitdisplay}
+Особый режим:
+\begin{fitdisplay}
+p\equiv1.
+\end{fitdisplay}
+Из уравнения $\dot p=\nu p-M_x$ при $p=1$ получаем
+\begin{fitdisplay}
+F'(x_s)=\mu+\nu.
+\end{fitdisplay}
+Особое управление определяется из $\dot x=0$:
+\begin{fitdisplay}
+u_sF(x_s)=\mu x_s,
+\qquad
+u_s=\frac{\mu x_s}{F(x_s)}.
+\end{fitdisplay}
+Для $F(x)=Ax^\varepsilon$:
+\begin{fitdisplay}
+x_s=\left(\frac{A\varepsilon}{\mu+\nu}\right)^{\frac{1}{1-\varepsilon}},
+\qquad
+u_s=\frac{\mu\varepsilon}{\mu+\nu}.
+\end{fitdisplay}
+В частном случае $A=1$, $\varepsilon=\frac12$:
+\begin{fitdisplay}
+x_s=\frac{1}{4(\mu+\nu)^2},
+\qquad
+u_s=\frac{\mu}{2(\mu+\nu)}.
+\end{fitdisplay}
+
+Качественно:
+\begin{fitdisplay}
+x_0<x_s\Rightarrow u=1\ \text{до выхода на }x_s,
+\end{fitdisplay}
+\begin{fitdisplay}
+x_0>x_s\Rightarrow u=0\ \text{до выхода на }x_s,
+\end{fitdisplay}
+\begin{fitdisplay}
+x_0=x_s\Rightarrow x(t)\equiv x_s,
+\quad u(t)\equiv u_s.
+\end{fitdisplay}
+Смысл: оптимальная политика выводит экономику на уровень, где
+\begin{fitdisplay}
+F'(x_s)=\mu+\nu,
+\end{fitdisplay}
+то есть предельная производительность капитала равна выбытию плюс дисконтирование.
+
+\section*{Билет 5. Двухсекторная модель Cobb--Douglas. Особый режим}
+
+Модель распределения ресурсов:
+\begin{fitdisplay}
+\dot x_1=uF(x),\qquad \dot x_2=(1-u)F(x),
+\qquad 0\le u\le1,
+\end{fitdisplay}
+\begin{fitdisplay}
+x_1(0)=x_{10}>0,
+\qquad x_2(0)=x_{20}>0,
+\end{fitdisplay}
+\begin{fitdisplay}
+J[u]=x_2(T)\to\max.
+\end{fitdisplay}
+Производственная функция Cobb--Douglas:
+\begin{fitdisplay}
+F(x)=Ax_1^{\varepsilon_1}x_2^{\varepsilon_2},
+\qquad
+\varepsilon_1>0,
+\quad \varepsilon_2>0,
+\quad \varepsilon_1+\varepsilon_2=1.
+\end{fitdisplay}
+Множитель $A>0$ можно убрать заменой масштаба времени.
+
+Гамильтониан:
+\begin{fitdisplay}
+H=\psi_1uF(x)+\psi_2(1-u)F(x)
+=F(x)\bigl(u(\psi_1-\psi_2)+\psi_2\bigr).
+\end{fitdisplay}
+Терминальные условия:
+\begin{fitdisplay}
+\psi_1(T)=0,
+\qquad
+\psi_2(T)=1.
+\end{fitdisplay}
+Функция переключения:
+\begin{fitdisplay}
+\Pi=\psi_1-\psi_2.
+\end{fitdisplay}
+\begin{fitdisplay}
+\Pi>0\Rightarrow u=1,
+\qquad
+\Pi<0\Rightarrow u=0,
+\qquad
+\Pi=0\Rightarrow \text{особый режим}.
+\end{fitdisplay}
+
+Сопряженная система:
+\begin{fitdisplay}
+\dot\psi_1=-F_{x_1}'(x)(u\Pi+\psi_2),
+\qquad
+\dot\psi_2=-F_{x_2}'(x)(u\Pi+\psi_2).
+\end{fitdisplay}
+На особой дуге $\Pi\equiv0$, следовательно $\psi_1=\psi_2$ и $\dot\psi_1=\dot\psi_2$. Поэтому
+\begin{fitdisplay}
+F_{x_1}'(x)=F_{x_2}'(x).
+\end{fitdisplay}
+Для Cobb--Douglas:
+\begin{fitdisplay}
+F_{x_1}'(x)=\frac{\varepsilon_1}{x_1}F(x),
+\qquad
+F_{x_2}'(x)=\frac{\varepsilon_2}{x_2}F(x).
+\end{fitdisplay}
+Значит,
+\begin{fitdisplay}
+\frac{x_1}{\varepsilon_1}=\frac{x_2}{\varepsilon_2}.
+\end{fitdisplay}
+Особая магистраль:
+\begin{fitdisplay}
+L_{\rm sng}=\left\{x\in\mathbb R_+^2:\frac{x_1}{\varepsilon_1}=\frac{x_2}{\varepsilon_2}\right\}.
+\end{fitdisplay}
+Чтобы оставаться на ней,
+\begin{fitdisplay}
+\frac{\dot x_1}{\varepsilon_1}=\frac{\dot x_2}{\varepsilon_2}.
+\end{fitdisplay}
+Отсюда
+\begin{fitdisplay}
+\frac{u}{\varepsilon_1}=\frac{1-u}{\varepsilon_2}
+\quad\Rightarrow\quad
+u_{\rm sng}=\varepsilon_1.
+\end{fitdisplay}
+
+Удобная замена координат:
+\begin{fitdisplay}
+y_1=\frac{x_1}{\varepsilon_1},
+\qquad
+y_2=\frac{x_2}{\varepsilon_2}.
+\end{fitdisplay}
+В этих координатах
+\begin{fitdisplay}
+L_{\rm sng}:\quad y_1=y_2.
+\end{fitdisplay}
+
+Для достаточно большого $T$ структура оптимального управления:
+\begin{fitdisplay}
+\text{граничный участок}\to \text{особая магистраль}\to \text{терминальный участок}.
+\end{fitdisplay}
+То есть
+\begin{fitdisplay}
+u(t)=
+\begin{cases}
+0\ \text{или}\ 1, & 0\le t<\tau,\\
+\varepsilon_1, & \tau<t<\theta,\\
+0, & \theta<t\le T.
+\end{cases}
+\end{fitdisplay}
+Если начальная точка уже на магистрали, то $\tau=0$.
+
+Обоснование оптимальности: максимизированный гамильтониан
+\begin{fitdisplay}
+M(x,\psi)=F(x)g(\psi),
+\qquad
+g(\psi)=\max\{\psi_1,\psi_2\}
+=\frac{\psi_1+\psi_2+|\psi_1-\psi_2|}{2}.
+\end{fitdisplay}
+Так как $F$ вогнута и $g(\psi(t))>0$, для любой допустимой пары $(\widehat x,\widehat u)$:
+\begin{fitdisplay}
+\Delta J\le
+\int_0^T
+\bigl[F(\widehat x)-F(x)-(F'(x),\widehat x-x)\bigr]g(\psi)\,dt\le0.
+\end{fitdisplay}
+Следовательно, экстремальный процесс оптимален.
+
+Главные формулы для запоминания:
+\begin{fitdisplay}
+L_{\rm sng}:\frac{x_1}{\varepsilon_1}=\frac{x_2}{\varepsilon_2},
+\qquad
+u_{\rm sng}=\varepsilon_1.
+\end{fitdisplay}
+
+\section*{Билет 6. ПМП на бесконечном интервале времени}
+
+Типичная задача:
+\begin{fitdisplay}
+\dot x=f(x,u),
+\qquad
+u(t)\in U,
+\qquad
+x(0)=x_0,
+\end{fitdisplay}
+\begin{fitdisplay}
+J[x,u]=\int_0^\infty e^{-\rho t}g(x(t),u(t))\,dt\to\max.
+\end{fitdisplay}
+Функционал является несобственным интегралом, поэтому нужны условия сходимости, например
+\begin{fitdisplay}
+\int_T^\infty e^{-\rho t}|g(x(t),u(t))|\,dt\to0.
+\end{fitdisplay}
+
+Гамильтониан Понтрягина:
+\begin{fitdisplay}
+H(x,t,u,\psi,\psi^0)=\langle f(x,u),\psi\rangle+
+\psi^0e^{-\rho t}g(x,u),
+\qquad \psi^0\ge0.
+\end{fitdisplay}
+Нетривиальность:
+\begin{fitdisplay}
+\|\psi(0)\|+\psi^0>0.
+\end{fitdisplay}
+
+Если $(x^*,u^*)$ оптимальна, то существуют $\psi(t)$ и $\psi^0\ge0$ такие, что
+\begin{fitdisplay}
+\dot x^*=f(x^*,u^*),
+\end{fitdisplay}
+\begin{fitdisplay}
+\dot\psi=-H_x(x^*,t,u^*,\psi,\psi^0),
+\end{fitdisplay}
+то есть
+\begin{fitdisplay}
+\dot\psi= -f_x(x^*,u^*)^T\psi
+-\psi^0 e^{-\rho t}g_x(x^*,u^*).
+\end{fitdisplay}
+Условие максимума:
+\begin{fitdisplay}
+H(x^*,t,u^*,\psi,\psi^0)=\max_{u\in U}H(x^*,t,u,\psi,\psi^0)
+\quad \text{п.в.}
+\end{fitdisplay}
+
+Если $\psi^0>0$, то нормальный случай, можно положить
+\begin{fitdisplay}
+\psi^0=1.
+\end{fitdisplay}
+Если $\psi^0=0$, то анормальный случай; его нельзя исключать без дополнительных условий.
+
+Главное отличие бесконечного горизонта: условия трансверсальности на бесконечности не следуют автоматически. Формулы
+\begin{fitdisplay}
+\lim_{t\to\infty}\psi(t)=0,
+\qquad
+\lim_{t\to\infty}\langle \psi(t),x^*(t)\rangle=0
+\end{fitdisplay}
+не являются общими теоремами. Они требуют дополнительных предположений.
+
+Запомнить:
+\begin{fitdisplay}
+\begin{gathered}
+\text{ПМП}=\text{сопряженная система}+\text{условие максимума}\\
++\text{нетривиальность}+\text{осторожная трансверсальность}.
+\end{gathered}
+\end{fitdisplay}
+
+\section*{Билет 7. Беллман, ПМП и текущие сопряженные переменные}
+
+Бесконечная стационарная задача:
+\begin{fitdisplay}
+\dot x=f(x,u),
+\qquad
+J(x,u)=\int_0^\infty e^{-\rho t}g(x(t),u(t))\,dt\to\max.
+\end{fitdisplay}
+Функция Беллмана:
+\begin{fitdisplay}
+V(x)=\sup_u\int_0^\infty e^{-\rho t}g(x(t),u(t))\,dt.
+\end{fitdisplay}
+Если $V\in C^1$, то уравнение Беллмана:
+\begin{fitdisplay}
+\rho V(x)=\max_{u\in U}\{g(x,u)+\langle V_x(x),f(x,u)\rangle\}.
+\end{fitdisplay}
+Оптимальная обратная связь:
+\begin{fitdisplay}
+u^*(x)\in\operatorname*{arg\,max}_{u\in U}
+\{g(x,u)+\langle V_x(x),f(x,u)\rangle\}.
+\end{fitdisplay}
+
+Текущая сопряженная переменная:
+\begin{fitdisplay}
+p(t)=V_x(x^*(t)).
+\end{fitdisplay}
+Связь с обычной present-value переменной:
+\begin{fitdisplay}
+\psi(t)=e^{-\rho t}p(t),
+\qquad
+p(t)=e^{\rho t}\psi(t).
+\end{fitdisplay}
+
+Текущий гамильтониан:
+\begin{fitdisplay}
+M(x,u,p)=g(x,u)+\langle p,f(x,u)\rangle.
+\end{fitdisplay}
+ПМП в текущих переменных:
+\begin{fitdisplay}
+\dot x^*=f(x^*,u^*),
+\end{fitdisplay}
+\begin{fitdisplay}
+\dot p=\rho p-M_x(x^*,u^*,p),
+\end{fitdisplay}
+\begin{fitdisplay}
+M(x^*,u^*,p)=\max_{u\in U}M(x^*,u,p).
+\end{fitdisplay}
+
+Экономический смысл:
+\begin{itemize}
+\item $V(x)$ -- максимальная будущая дисконтированная полезность;
+\item $V_x(x)$ -- предельная ценность состояния;
+\item $p(t)$ -- текущая теневая цена;
+\item $\psi(t)$ -- та же цена, приведенная к начальному моменту.
+\end{itemize}
+
+Важно:
+\begin{fitdisplay}
+\text{Беллман дает достаточность через проверочную теорему,}
+\end{fitdisplay}
+\begin{fitdisplay}
+\text{а ПМП обычно дает только необходимые условия.}
+\end{fitdisplay}
+
+\section*{Билет 8. Достаточные условия оптимальности на бесконечном интервале}
+
+Задача:
+\begin{fitdisplay}
+\dot x=f(x,u),
+\qquad
+J=\int_0^\infty e^{-\rho t}g(x,u)\,dt\to\max.
+\end{fitdisplay}
+ПМП сам по себе обычно является только необходимым условием. Для достаточности нужны дополнительные условия.
+
+Пусть допустимая пара $(x^*,u^*)$ удовлетворяет нормальной форме ПМП:
+\begin{fitdisplay}
+\dot\psi=-H_x(x^*,t,u^*,\psi),
+\end{fitdisplay}
+\begin{fitdisplay}
+H(x^*,t,u^*,\psi)=\max_{u\in U}H(x^*,t,u,\psi),
+\end{fitdisplay}
+где
+\begin{fitdisplay}
+H(x,t,u,\psi)=\langle f(x,u),\psi\rangle+e^{-\rho t}g(x,u).
+\end{fitdisplay}
+
+Максимизированный гамильтониан:
+\begin{fitdisplay}
+\mathcal H(x,t,\psi(t))=
+\max_{u\in U}\{\langle f(x,u),\psi(t)\rangle+e^{-\rho t}g(x,u)\}.
+\end{fitdisplay}
+
+Достаточные условия оптимальности:
+\begin{enumerate}
+\item область состояний $G$ выпукла;
+\item функция $x\mapsto\mathcal H(x,t,\psi(t))$ вогнута по $x$;
+\item выполнено условие на бесконечности:
+\begin{fitdisplay}
+\liminf_{t\to\infty}\langle \psi(t),x(t)-x^*(t)\rangle\ge0
+\end{fitdisplay}
+для любой допустимой траектории $x(t)$.
+\end{enumerate}
+Тогда
+\begin{fitdisplay}
+J[x,u]\le J[x^*,u^*],
+\end{fitdisplay}
+то есть $(x^*,u^*)$ оптимальна.
+
+Идея доказательства:
+\begin{fitdisplay}
+J_T[x,u]-J_T[x^*,u^*]
+\le
+-\langle \psi(T),x(T)-x^*(T)\rangle.
+\end{fitdisplay}
+Переходя к пределу $T\to\infty$ и используя предельное условие, получаем оптимальность.
+
+Альтернатива -- проверочная теорема Беллмана: если существует гладкая функция $V$, удовлетворяющая
+\begin{fitdisplay}
+\rho V(x)=\max_{u\in U}\{g(x,u)+\langle V_x(x),f(x,u)\rangle\},
+\end{fitdisplay}
+и управление достигает максимума, то оно оптимально при подходящем условии на бесконечности.
+
+Запомнить:
+\begin{fitdisplay}
+\text{ПМП}+\text{вогнутость максимизированного }H+\text{условие на }\infty
+\Rightarrow \text{оптимальность}.
+\end{fitdisplay}
+
+\section*{Общий минимум для блока B}
+
+\begin{itemize}
+\item Билет 4: Ramsey: $F'(x_s)=\mu+\nu$, $u_sF(x_s)=\mu x_s$.
+\item Билет 5: two-sector Cobb--Douglas: $x_1/\varepsilon_1=x_2/\varepsilon_2$, $u_{\rm sng}=\varepsilon_1$.
+\item Билет 6: ПМП на бесконечности: сопряженное уравнение, максимум, нетривиальность; трансверсальность требует осторожности.
+\item Билет 7: Bellman: $\rho V=\max\{g+\langle V_x,f\rangle\}$; $p=V_x$, $\psi=e^{-\rho t}p$.
+\item Билет 8: достаточность: вогнутость максимизированного гамильтониана и условие на бесконечности.
+\end{itemize}
+
+
+\blocktitle{C}{Геометрическая теория управления}{Билеты 9--11. Краткая версия для запоминания}
+
+\section*{Билет 9. Геометрическая теория управления}
+
+Гладкое многообразие $M$ локально устроено как $\mathbb R^n$. В точке $q\in M$ есть касательное пространство $T_qM$.
+
+Векторное поле:
+\begin{fitdisplay}
+X:M\to TM,
+\qquad X(q)\in T_qM.
+\end{fitdisplay}
+Оно задает ОДУ:
+\begin{fitdisplay}
+\dot q=X(q)
+\end{fitdisplay}
+и поток $P_X^t$.
+
+Управляемая система:
+\begin{fitdisplay}
+\dot q=V_u(q),\qquad u\in U.
+\end{fitdisplay}
+Система, линейная по управлению:
+\begin{fitdisplay}
+\dot q=f_0(q)+\sum_{i=1}^m u_i f_i(q).
+\end{fitdisplay}
+Бездрейфовая система:
+\begin{fitdisplay}
+\dot q=\sum_{i=1}^m u_i f_i(q).
+\end{fitdisplay}
+
+Скобка Ли:
+\begin{fitdisplay}
+[X,Y](\varphi)=X(Y\varphi)-Y(X\varphi).
+\end{fitdisplay}
+В координатах:
+\begin{fitdisplay}
+[X,Y]^i=\sum_{j=1}^n
+\left(
+X^j\frac{\partial Y^i}{\partial x^j}
+-
+Y^j\frac{\partial X^i}{\partial x^j}
+\right).
+\end{fitdisplay}
+Свойства:
+\begin{fitdisplay}
+[X,Y]=-[Y,X],\qquad [X,X]=0,
+\end{fitdisplay}
+\begin{fitdisplay}
+[X,[Y,Z]]+[Y,[Z,X]]+[Z,[X,Y]]=0.
+\end{fitdisplay}
+
+Смысл: коммутаторы дают направления, возникающие из быстрых переключений управлений.
+
+Алгебра Ли:
+\begin{fitdisplay}
+\Lie\{f_1,\ldots,f_m\}
+\end{fitdisplay}
+содержит поля и все их повторные скобки:
+\begin{fitdisplay}
+f_i,\quad [f_i,f_j],\quad [f_i,[f_j,f_k]],\quad\ldots
+\end{fitdisplay}
+
+Условие скобочной порождаемости:
+\begin{fitdisplay}
+\Lie_q\{f_1,\ldots,f_m\}=T_qM
+\qquad \forall q\in M.
+\end{fitdisplay}
+Если $\dim M=n$, то
+\begin{fitdisplay}
+\rank\{f_i(q),[f_i,f_j](q),[f_i,[f_j,f_k]](q),\ldots\}=n.
+\end{fitdisplay}
+
+Для бездрейфовых систем это условие ведет к управляемости по теореме Чоу--Рашевского. Для систем с дрейфом
+\begin{fitdisplay}
+\dot q=f_0(q)+\sum u_i f_i(q)
+\end{fitdisplay}
+ранговое условие обычно дает доступность, но не автоматически полную управляемость.
+
+\textbf{Главная формула:}
+\begin{fitdisplay}
+\dot q=\sum u_i f_i(q),
+\qquad
+\Lie_q\{f_1,\ldots,f_m\}=T_qM.
+\end{fitdisplay}
+
+\section*{Билет 10. Сопряженная точка и слабый минимум}
+
+Рассматривается задача:
+\begin{fitdisplay}
+J[x]=\int_{t_0}^{t_1} f(t,x,\dot x)\,dt\to\min,
+\qquad x(t_0)=a,
+\quad x(t_1)=b.
+\end{fitdisplay}
+
+Экстремаль удовлетворяет уравнению Эйлера--Лагранжа:
+\begin{fitdisplay}
+\frac{d}{dt}f_{\dot x}(t,x,\dot x)-f_x(t,x,\dot x)=0.
+\end{fitdisplay}
+
+Для вариаций $x+\lambda h$, где
+\begin{fitdisplay}
+h(t_0)=h(t_1)=0,
+\end{fitdisplay}
+вторая вариация:
+\begin{fitdisplay}
+\delta^2J[h]=
+\int_{t_0}^{t_1}
+\left(
+\langle A\dot h,\dot h\rangle
++
+2\langle C\dot h,h\rangle
++
+\langle Bh,h\rangle
+\right)dt,
+\end{fitdisplay}
+где
+\begin{fitdisplay}
+A=f_{\dot x\dot x},\qquad B=f_{xx},\qquad C=f_{x\dot x}.
+\end{fitdisplay}
+
+Условие Лежандра:
+\begin{fitdisplay}
+A(t)\ge0.
+\end{fitdisplay}
+Усиленное условие Лежандра:
+\begin{fitdisplay}
+A(t)>0.
+\end{fitdisplay}
+
+Уравнение Якоби:
+\begin{fitdisplay}
+-\frac{d}{dt}(A\dot h+C^Th)+C\dot h+Bh=0.
+\end{fitdisplay}
+
+Точка $\tau\in(t_0,t_1]$ называется сопряженной с $t_0$, если существует нетривиальное решение уравнения Якоби:
+\begin{fitdisplay}
+h(t_0)=0,
+\qquad
+h(\tau)=0,
+\qquad
+h\not\equiv0.
+\end{fitdisplay}
+
+Достаточное условие слабого минимума: если экстремаль удовлетворяет уравнению Эйлера, усиленному условию Лежандра и на $(t_0,t_1]$ нет сопряженных с $t_0$ точек, то она дает строгий слабый минимум.
+
+\textbf{Главная схема:}
+\begin{fitdisplay}
+\text{Euler}+
+\text{strong Legendre}+
+\text{no conjugate points}
+\Rightarrow
+\text{strict weak minimum}.
+\end{fitdisplay}
+
+\section*{Билет 11. Особые траектории и особые управления}
+
+Рассмотрим систему, линейную по управлению:
+\begin{fitdisplay}
+\dot x=f_0(x)+u f_1(x),
+\qquad u\in[a,b].
+\end{fitdisplay}
+
+Hamiltonian:
+\begin{fitdisplay}
+H=h_0+u h_1,
+\qquad h_i(x,\psi)=\langle\psi,f_i(x)\rangle.
+\end{fitdisplay}
+
+Функция переключения:
+\begin{fitdisplay}
+\Phi(t)=H_u=h_1(x(t),\psi(t)).
+\end{fitdisplay}
+
+Обычные участки:
+\begin{fitdisplay}
+\Phi>0\Rightarrow u=b,
+\qquad
+\Phi<0\Rightarrow u=a.
+\end{fitdisplay}
+
+Особый режим:
+\begin{fitdisplay}
+\Phi(t)\equiv0
+\end{fitdisplay}
+на некотором интервале. Тогда условие максимума не определяет управление.
+
+Метод построения:
+\begin{fitdisplay}
+\Phi=0,
+\quad \dot\Phi=0,
+\quad \ddot\Phi=0,
+\quad\ldots
+\end{fitdisplay}
+до тех пор, пока в одной из производных явно не появится $u$. Тогда из этого уравнения находят
+\begin{fitdisplay}
+u_{\sng}.
+\end{fitdisplay}
+
+Порядок особого управления $q$:
+\begin{fitdisplay}
+\frac{\partial}{\partial u}
+\left(\frac{d}{dt}\right)^k H_u=0,
+\quad k=0,\ldots,2q-1,
+\end{fitdisplay}
+\begin{fitdisplay}
+\frac{\partial}{\partial u}
+\left(\frac{d}{dt}\right)^{2q}H_u\ne0.
+\end{fitdisplay}
+
+Условие Kelley при максимизационной конвенции:
+\begin{fitdisplay}
+(-1)^q
+\frac{\partial}{\partial u}
+\left(\frac{d}{dt}\right)^{2q}H_u<0.
+\end{fitdisplay}
+
+Через скобки Пуассона:
+\begin{fitdisplay}
+\dot h=\{H,h\}.
+\end{fitdisplay}
+Для первого порядка:
+\begin{fitdisplay}
+\Phi=h_1=0,
+\end{fitdisplay}
+\begin{fitdisplay}
+\dot\Phi=\{h_0,h_1\}=0,
+\end{fitdisplay}
+\begin{fitdisplay}
+\ddot\Phi=
+\{h_0,\{h_0,h_1\}\}
++u\{h_1,\{h_0,h_1\}\}=0.
+\end{fitdisplay}
+Отсюда
+\begin{fitdisplay}
+u_{\sng}
+=-
+\frac{\{h_0,\{h_0,h_1\}\}}
+{\{h_1,\{h_0,h_1\}\}}.
+\end{fitdisplay}
+
+После нахождения обязательно проверить:
+\begin{fitdisplay}
+u_{\sng}\in[a,b].
+\end{fitdisplay}
+
+\textbf{Главная схема:}
+\begin{fitdisplay}
+\Phi\equiv0
+\Rightarrow
+\Phi=\dot\Phi=\ddot\Phi=\cdots=0
+\Rightarrow
+u_{\sng}
+\Rightarrow
+\text{проверка допустимости и Kelley}.
+\end{fitdisplay}
+
+
+\blocktitle{D}{Волновое уравнение, граничное управление и наблюдение}{Билеты 12--14. Краткая версия для запоминания}
+
+\section*{Билет 12. Граничное управление и наблюдение}
+
+Волновое уравнение:
+\begin{fitdisplay}
+ y_{tt}=y_{xx}-q(x)y,\quad 0<x<l.
+\end{fitdisplay}
+
+Граничное управление:
+\begin{fitdisplay}
+ y(t,0)=u_0(t),\qquad y(t,l)=u_1(t).
+\end{fitdisplay}
+
+Пространство управлений:
+\begin{fitdisplay}
+ H=L_2(0,T)\times L_2(0,T).
+\end{fitdisplay}
+
+Оператор управления:
+\begin{fitdisplay}
+ A:H\to F,
+ \qquad
+ Au=(y(T),y_t(T)).
+\end{fitdisplay}
+
+Типичная слабая постановка:
+\begin{fitdisplay}
+ F=L_2(0,l)\times H^{-1}(0,l),
+\end{fitdisplay}
+\begin{fitdisplay}
+ F^*=H_0^1(0,l)\times L_2(0,l).
+\end{fitdisplay}
+
+Сопряженная задача:
+\begin{fitdisplay}
+ p_{tt}=p_{xx}-q(x)p,
+ \qquad p(t,0)=p(t,l)=0.
+\end{fitdisplay}
+
+Наблюдение:
+\begin{fitdisplay}
+ A^*v=(p_x(\cdot,0),-p_x(\cdot,l)).
+\end{fitdisplay}
+
+Двойственность:
+\begin{fitdisplay}
+ \langle Au,v\rangle_{F,F^*}
+ =
+ \langle u,A^*v\rangle_H.
+\end{fitdisplay}
+
+Неравенство наблюдаемости:
+\begin{fitdisplay}
+ \|A^*v\|_{H^*}^2\ge \mu\|v\|_{F^*}^2,
+ \qquad \mu>0.
+\end{fitdisplay}
+
+Критическое время:
+\begin{fitdisplay}
+ T^*=l\quad \text{для двухстороннего управления},
+\end{fitdisplay}
+\begin{fitdisplay}
+ T^*=2l\quad \text{для одностороннего управления}.
+\end{fitdisplay}
+
+Главная схема:
+\begin{fitdisplay}
+ T>T^*
+ \Rightarrow
+ \text{наблюдаемость}
+ \Rightarrow
+ \text{точная управляемость}.
+\end{fitdisplay}
+
+\section*{Билет 13. Неравенство наблюдаемости и вариационный метод}
+
+Абстрактная задача управления:
+\begin{fitdisplay}
+ Au=f,
+ \qquad
+ A:H\to F.
+\end{fitdisplay}
+
+Сопряженный оператор:
+\begin{fitdisplay}
+ A^*:F^*\to H^*.
+\end{fitdisplay}
+
+Точная управляемость:
+\begin{fitdisplay}
+ R(A)=F.
+\end{fitdisplay}
+
+Критерий точной управляемости:
+\begin{fitdisplay}
+ \|A^*v\|_{H^*}^2
+ \ge
+ \mu\|v\|_{F^*}^2,
+ \qquad \mu>0.
+\end{fitdisplay}
+
+Важно:
+\begin{fitdisplay}
+ N(A^*)=\{0\}
+\end{fitdisplay}
+само по себе означает только плотность $R(A)$, то есть приближенную управляемость, но не точную.
+
+Нормальное решение:
+\begin{fitdisplay}
+ u_*=
+ \operatorname*{arg\,min}\{\|u\|_H: Au=f\}.
+\end{fitdisplay}
+
+Истокопредставимость:
+\begin{fitdisplay}
+ u_*=J_HA^*v_*.
+\end{fitdisplay}
+
+Вариационный функционал:
+\begin{fitdisplay}
+ I(v)=\|A^*v\|^2-2\langle f,v\rangle\to\min.
+\end{fitdisplay}
+
+После нахождения $v_*$:
+\begin{fitdisplay}
+ u_*=J_HA^*v_*.
+\end{fitdisplay}
+
+Конечномерная версия:
+\begin{fitdisplay}
+ I_N(v_N)=\|A_N^*v_N\|^2-2\langle f_N,v_N\rangle\to\min.
+\end{fitdisplay}
+
+Главное условие дискретизации:
+\begin{fitdisplay}
+ \langle A_Nu_N,v_N\rangle
+ =
+ \langle u_N,A_N^*v_N\rangle.
+\end{fitdisplay}
+
+\section*{Билет 14. Однородная струна и конечномерная схема}
+
+Однородная струна:
+\begin{fitdisplay}
+ p_{tt}=p_{xx},
+ \qquad p(t,0)=p(t,l)=0.
+\end{fitdisplay}
+
+Энергия:
+\begin{fitdisplay}
+ E(t)=\int_0^l(p_t^2+p_x^2)\,dx.
+\end{fitdisplay}
+
+Энергия сохраняется:
+\begin{fitdisplay}
+ E(t)=E(0)=E(T).
+\end{fitdisplay}
+
+Наблюдение:
+\begin{fitdisplay}
+ A^*v=(p_x(\cdot,0),-p_x(\cdot,l)).
+\end{fitdisplay}
+
+Неравенство наблюдаемости:
+\begin{fitdisplay}
+ \int_0^T\left(|p_x(t,0)|^2+|p_x(t,l)|^2\right)dt
+ \ge
+ \mu\left(\|v_0\|_{H_0^1}^2+\|v_1\|_{L_2}^2\right).
+\end{fitdisplay}
+
+Для двухстороннего наблюдения:
+\begin{fitdisplay}
+ T>l.
+\end{fitdisplay}
+
+В студенческой нормировке:
+\begin{fitdisplay}
+ \mu=\frac{2(T-l)}{l}>0.
+\end{fitdisplay}
+
+Взаимно сопряженные конечномерные операторы:
+\begin{fitdisplay}
+ A_N:H_N\to F_N,
+ \qquad
+ A_N^*:F_N^*\to H_N^*.
+\end{fitdisplay}
+
+Дискретная двойственность:
+\begin{fitdisplay}
+ \langle A_Nu_N,v_N\rangle
+ =
+ \langle u_N,A_N^*v_N\rangle.
+\end{fitdisplay}
+
+Матрично:
+\begin{fitdisplay}
+ A_N^*=G_H^{-1}A_N^TG_F.
+\end{fitdisplay}
+
+Квадратичная задача:
+\begin{fitdisplay}
+ I_N(c)=c^TG_Nc-2b_N^Tc\to\min.
+\end{fitdisplay}
+
+Если $G_N>0$, то
+\begin{fitdisplay}
+ G_Nc=b_N.
+\end{fitdisplay}
+
+Восстановление управления:
+\begin{fitdisplay}
+ u_N=J_{H_N}A_N^*v_N.
+\end{fitdisplay}
+
+Ключевая схема блока D:
+\begin{fitdisplay}
+ \langle Au,v\rangle=\langle u,A^*v\rangle
+ \Rightarrow
+ \|A^*v\|^2\ge\mu\|v\|^2
+ \Rightarrow
+ u_*=J_HA^*v_*
+ \Rightarrow
+ I(v)=\|A^*v\|^2-2\langle f,v\rangle.
+\end{fitdisplay}
+
+
+\blocktitle{E}{Пространства Соболева и оптимальное управление теплом}{Билеты 15--17. Краткая версия для запоминания}
+
+\section*{Билет 15. Обобщенная производная и пространства Соболева}
+
+Пусть \(\Omega\subset\mathbb R^n\), \(u\in L_{1,\mathrm{loc}}(\Omega)\). Функция \(v_\alpha\in L_{1,\mathrm{loc}}(\Omega)\) называется обобщенной производной \(D^\alpha u\), если
+\begin{fitdisplay}
+\int_\Omega uD^\alpha\varphi\,dx
+=
+(-1)^{|\alpha|}
+\int_\Omega v_\alpha\varphi\,dx
+\quad
+\forall\varphi\in C_c^\infty(\Omega).
+\end{fitdisplay}
+Тогда пишут
+\begin{fitdisplay}
+D^\alpha u=v_\alpha.
+\end{fitdisplay}
+
+В одномерном случае:
+\begin{fitdisplay}
+\int_a^b f(x)\varphi'(x)\,dx
+=
+-
+\int_a^b \omega(x)\varphi(x)\,dx,
+\quad
+\forall\varphi\in C_c^\infty(a,b).
+\end{fitdisplay}
+
+Свойства: обобщенная производная единственна почти всюду, линейна, а если классическая производная существует, то она совпадает с обобщенной.
+
+Пространство Соболева:
+\begin{fitdisplay}
+W_p^m(\Omega)=
+\{u\in L_p(\Omega):D^\alpha u\in L_p(\Omega),\ |\alpha|\le m\}.
+\end{fitdisplay}
+
+Норма:
+\begin{fitdisplay}
+\|u\|_{W_p^m}=
+\left(
+\sum_{|\alpha|\le m}\|D^\alpha u\|_{L_p}^p
+\right)^{1/p}.
+\end{fitdisplay}
+
+При \(p=2\):
+\begin{fitdisplay}
+H^m(\Omega)=W_2^m(\Omega).
+\end{fitdisplay}
+
+Пример:
+\begin{fitdisplay}
+H^1(a,b)=\{u\in L_2(a,b):u'\in L_2(a,b)\},
+\end{fitdisplay}
+\begin{fitdisplay}
+\|u\|_{H^1}^2=\int_a^b(u^2+(u')^2)\,dx.
+\end{fitdisplay}
+
+\begin{fitdisplay}
+H_0^1(\Omega)=\overline{C_c^\infty(\Omega)}^{H^1}.
+\end{fitdisplay}
+
+В одномерном случае:
+\begin{fitdisplay}
+H^1(a,b)\hookrightarrow C[a,b],
+\end{fitdisplay}
+\begin{fitdisplay}
+u(\beta)-u(\alpha)=\int_\alpha^\beta u'(x)\,dx.
+\end{fitdisplay}
+
+Соболевское вложение: если \(mp<n\), то
+\begin{fitdisplay}
+W_p^m(\Omega)\hookrightarrow L_q(\Omega),
+\quad
+q\le \frac{np}{n-mp}.
+\end{fitdisplay}
+Если \(mp>n\), то
+\begin{fitdisplay}
+W_p^m(\Omega)\hookrightarrow C(\overline\Omega)
+\end{fitdisplay}
+или в гёльдеровы пространства.
+
+Для тепловых задач:
+\begin{fitdisplay}
+H_0^1\subset L_2\subset H^{-1}.
+\end{fitdisplay}
+Если
+\begin{fitdisplay}
+y\in L_2(0,T;H_0^1),
+\quad
+y_t\in L_2(0,T;H^{-1}),
+\end{fitdisplay}
+то
+\begin{fitdisplay}
+y\in C([0,T];L_2).
+\end{fitdisplay}
+
+Ключевая схема:
+\begin{fitdisplay}
+\text{слабая производная}
+\Rightarrow
+\text{пространства Соболева}
+\Rightarrow
+\text{слабые решения PDE}.
+\end{fitdisplay}
+
+
+
+\section*{Билет 16. Оптимальный нагрев стержня}
+
+Пусть
+\begin{fitdisplay}
+Q=(0,T)\times(0,l).
+\end{fitdisplay}
+
+Задача:
+\begin{fitdisplay}
+J(u)=\int_0^l (x(s,T;u)-b(s))^2\,ds\to\inf_{u\in U},
+\end{fitdisplay}
+\begin{fitdisplay}
+x_t=x_{ss}+u,
+\quad (s,t)\in Q,
+\end{fitdisplay}
+\begin{fitdisplay}
+x(0,t)=x(l,t)=0,
+\quad
+x(s,0)=\varphi(s),
+\end{fitdisplay}
+\begin{fitdisplay}
+U=\{u\in L_2(Q):\|u\|_{L_2(Q)}\le R\}.
+\end{fitdisplay}
+
+Функциональные пространства:
+\begin{fitdisplay}
+V=H_0^1(0,l),
+\quad H=L_2(0,l),
+\quad V^*=H^{-1}(0,l),
+\end{fitdisplay}
+\begin{fitdisplay}
+V\subset H\simeq H^*\subset V^*.
+\end{fitdisplay}
+
+Обобщенное решение:
+\begin{fitdisplay}
+x\in L_2(0,T;H_0^1(0,l)),
+\end{fitdisplay}
+\begin{fitdisplay}
+x_t\in L_2(0,T;H^{-1}(0,l)).
+\end{fitdisplay}
+
+Слабая форма:
+\begin{fitdisplay}
+\langle x_t(t),v\rangle_{H^{-1},H_0^1}
++
+\int_0^l x_s(s,t)v_s(s)\,ds
+=
+\int_0^l u(s,t)v(s)\,ds
+\end{fitdisplay}
+для всех
+\begin{fitdisplay}
+v\in H_0^1(0,l).
+\end{fitdisplay}
+
+Важное вложение:
+\begin{fitdisplay}
+x\in C([0,T];L_2(0,l)).
+\end{fitdisplay}
+Поэтому \(x(T)\) корректно определено.
+
+Существование: для каждого
+\begin{fitdisplay}
+u\in L_2(Q),
+\quad
+\varphi\in L_2(0,l)
+\end{fitdisplay}
+существует обобщенное решение.
+
+Единственность: если \(x_1,x_2\) -- два решения, то \(z=x_1-x_2\) удовлетворяет
+\begin{fitdisplay}
+z_t=z_{ss},
+\quad z(0)=0.
+\end{fitdisplay}
+Энергетическая оценка:
+\begin{fitdisplay}
+\frac12\frac{d}{dt}\|z(t)\|_{L_2}^2+
+\|z_s(t)\|_{L_2}^2=0.
+\end{fitdisplay}
+Следовательно,
+\begin{fitdisplay}
+z=0.
+\end{fitdisplay}
+
+Теорема Вейерштрасса:
+\begin{fitdisplay}
+U=\{u:\|u\|\le R\}
+\end{fitdisplay}
+выпукло, замкнуто и ограничено в \(L_2(Q)\), значит слабо компактно.
+
+Берем минимизирующую последовательность:
+\begin{fitdisplay}
+u_k\rightharpoonup u_*\in U.
+\end{fitdisplay}
+
+Оператор
+\begin{fitdisplay}
+u\mapsto x(T;u)
+\end{fitdisplay}
+линеен и непрерывен, поэтому
+\begin{fitdisplay}
+J(u)=\|x(T;u)-b\|_{L_2}^2
+\end{fitdisplay}
+слабо полунепрерывен снизу.
+
+Значит,
+\begin{fitdisplay}
+J(u_*)=\inf_{u\in U}J(u).
+\end{fitdisplay}
+
+Итог:
+\begin{fitdisplay}
+\begin{gathered}
+\text{слабая компактность }U+\text{слабая полунепрерывность }J\\
+\Rightarrow\text{существует оптимальное управление}.
+\end{gathered}
+\end{fitdisplay}
+
+
+
+\section*{Билет 17. Градиент функционала и РМПГ}
+
+Задача нагрева:
+\begin{fitdisplay}
+J(u)=\int_0^l (x(s,T;u)-b(s))^2ds\to\inf,
+\end{fitdisplay}
+\begin{fitdisplay}
+x_t=x_{ss}+u,
+\quad x(0,t)=x(l,t)=0,
+\quad x(s,0)=\varphi(s),
+\end{fitdisplay}
+\begin{fitdisplay}
+U=\{u\in L_2(Q):\|u\|\le R\}.
+\end{fitdisplay}
+
+Вариация состояния:
+\begin{fitdisplay}
+z_t=z_{ss}+v,
+\quad z(0,t)=z(l,t)=0,
+\quad z(s,0)=0.
+\end{fitdisplay}
+
+Первая вариация:
+\begin{fitdisplay}
+\delta J(u;v)=
+2\int_0^l (x(s,T)-b(s))z(s,T)\,ds.
+\end{fitdisplay}
+
+Сопряженная задача:
+\begin{fitdisplay}
+-\psi_t=\psi_{ss},
+\end{fitdisplay}
+\begin{fitdisplay}
+\psi(0,t)=\psi(l,t)=0,
+\end{fitdisplay}
+\begin{fitdisplay}
+\psi(s,T)=2(x(s,T;u)-b(s)).
+\end{fitdisplay}
+
+Тогда:
+\begin{fitdisplay}
+\delta J(u;v)=\iint_Q \psi(s,t)v(s,t)\,dsdt.
+\end{fitdisplay}
+
+Следовательно:
+\begin{fitdisplay}
+J'(u)=\psi.
+\end{fitdisplay}
+
+Критерий оптимальности на выпуклом \(U\):
+\begin{fitdisplay}
+u_*\in U^*
+\Longleftrightarrow
+\langle J'(u_*),u-u_*\rangle\ge0
+\quad \forall u\in U.
+\end{fitdisplay}
+
+Для шара
+\begin{fitdisplay}
+U=\{u:\|u\|\le R\}
+\end{fitdisplay}
+эквивалентно:
+\begin{fitdisplay}
+J'(u_*)+2\lambda_*u_*=0,
+\end{fitdisplay}
+\begin{fitdisplay}
+\lambda_*(\|u_*\|^2-R^2)=0,
+\end{fitdisplay}
+\begin{fitdisplay}
+\lambda_*\ge0,
+\quad
+\|u_*\|\le R.
+\end{fitdisplay}
+
+Если пишут
+\begin{fitdisplay}
+J'(u_*)+\mu_*u_*=0,
+\end{fitdisplay}
+то
+\begin{fitdisplay}
+\mu_*=2\lambda_*.
+\end{fitdisplay}
+
+Обычный метод проекции градиента:
+\begin{fitdisplay}
+u_{k+1}=P_U(u_k-\beta_kJ'(u_k)).
+\end{fitdisplay}
+
+Функция Тихонова:
+\begin{fitdisplay}
+T_k(u)=J(u)+\alpha_k\|u\|^2.
+\end{fitdisplay}
+
+Градиент:
+\begin{fitdisplay}
+T_k'(u)=J'(u)+2\alpha_k u.
+\end{fitdisplay}
+
+Регуляризованный метод проекции градиента:
+\begin{fitdisplay}
+u_{k+1}=P_U\left(u_k-\beta_k(J_k'(u_k)+2\alpha_k u_k)\right).
+\end{fitdisplay}
+
+В задаче нагрева:
+\begin{fitdisplay}
+J_k'(u_k)\approx\psi_k.
+\end{fitdisplay}
+Поэтому:
+\begin{fitdisplay}
+u_{k+1}=P_U\left(u_k-\beta_k(\psi_k+2\alpha_k u_k)\right).
+\end{fitdisplay}
+
+Ключевая схема:
+\begin{fitdisplay}
+\begin{gathered}
+\text{прямая задача}\Rightarrow\text{сопряженная задача}\Rightarrow J'(u)=\psi\\
+\Rightarrow\text{вариационное неравенство}\Rightarrow\text{РМПГ}.
+\end{gathered}
+\end{fitdisplay}
+
+
+\blocktitle{F}{Линейно-квадратичные игры, Berge и Pareto}{Билеты 18--20. Краткая версия для запоминания}
+
+\ticket{18}{Равновесие по Нэшу в ЛК-дифференциальной игре трех лиц}
+\official{18. Условия существования и явный вид ситуации равновесия по Нэшу в дифференциальной линейно-квадратичной дифференциальной игре трех лиц.}
+
+Модель:
+\begin{fitdisplay}
+\dot x=A(t)x+u_1+u_2+u_3,
+\qquad x(t_0)=x_0,
+\qquad x,u_i\in\R^n.
+\end{fitdisplay}
+Игроки используют линейные позиционные стратегии:
+\begin{fitdisplay}
+u_i(t,x)=Q_i(t)x,
+\qquad Q_i(\cdot)\in C^{n\times n}[0,\vartheta].
+\end{fitdisplay}
+Функции выигрыша:
+\begin{fitdisplay}
+J_i=x^{\top}(\vartheta)C_ix(\vartheta)+
+\int_{t_0}^{\vartheta}\sum_{j=1}^3 u_j^{\top}D_{ij}u_j\,dt,
+\qquad i=1,2,3.
+\end{fitdisplay}
+Равновесие по Нэшу:
+\begin{fitdisplay}
+J_i(U^e,t_0,x_0)\ge J_i(U_i,U_{-i}^e,t_0,x_0)
+\quad \forall U_i,
+\quad i=1,2,3.
+\end{fitdisplay}
+
+Вводятся функции Беллмана:
+\begin{fitdisplay}
+V_i(t,x)=x^{\top}\Theta_i(t)x,
+\qquad \Theta_i^{\top}=\Theta_i.
+\end{fitdisplay}
+Для каждого игрока максимизация идет по его собственному управлению \(u_i\). Условие первого порядка:
+\begin{fitdisplay}
+\frac{\partial W_i}{\partial u_i}=V_{i,x}+2D_{ii}u_i=0.
+\end{fitdisplay}
+Для существования конечного максимума нужно
+\begin{fitdisplay}
+D_{ii}<0.
+\end{fitdisplay}
+Тогда
+\begin{fitdisplay}
+u_i^e(t,x)=-D_{ii}^{-1}\Theta_i(t)x,
+\qquad i=1,2,3.
+\end{fitdisplay}
+
+Матрицы \(\Theta_i\) удовлетворяют связанной системе Риккати:
+\begin{fitdisplay}
+\begin{aligned}
+0={}&\dot\Theta_i+\Theta_iA+A^{\top}\Theta_i-\Theta_iD_{ii}^{-1}\Theta_i \\
+&-\sum_{j\ne i}(\Theta_iD_{jj}^{-1}\Theta_j+\Theta_jD_{jj}^{-1}\Theta_i)
++\sum_{j\ne i}\Theta_jD_{jj}^{-1}D_{ij}D_{jj}^{-1}\Theta_j,
+\end{aligned}
+\end{fitdisplay}
+\begin{fitdisplay}
+\Theta_i(\vartheta)=C_i,
+\qquad i=1,2,3.
+\end{fitdisplay}
+Если эта система имеет продолжимое симметричное решение на \([0,\vartheta]\), то стратегии
+\begin{fitdisplay}
+U_i^e:\quad u_i^e(t,x)=-D_{ii}^{-1}\Theta_i(t)x
+\end{fitdisplay}
+образуют равновесие по Нэшу.
+
+Равновесные выигрыши:
+\begin{fitdisplay}
+J_i^e(t_0,x_0)=x_0^{\top}\Theta_i(t_0)x_0.
+\end{fitdisplay}
+Если хотя бы для одного игрока \(D_{ii}>0\), равновесие по Нэшу отсутствует: максимум по его управлению не существует.
+
+\textbf{Ключевая фраза:} Nash в трехлицевой LQ-игре строится через три функции Беллмана \(V_i=x^{\top}\Theta_i x\); равновесные стратегии имеют вид \(u_i^e=-D_{ii}^{-1}\Theta_i x\), если связанная система Риккати имеет решение.
+
+
+\ticket{19}{Равновесие по Бержу в ЛК-игре двух лиц с малым параметром}
+\official{19. Условия существования и явный вид ситуации равновесия по Бержу в дифференциальной линейно-квадратичной игре двух лиц с малым влиянием одного из игроков на скорость изменения фазового вектора.}
+
+Модель:
+\begin{fitdisplay}
+\dot x=A(t)x+u_1+\varepsilon u_2,
+\qquad 0\le\varepsilon\ll1.
+\end{fitdisplay}
+Стратегии:
+\begin{fitdisplay}
+u_i(t,x)=Q_i(t)x,
+\qquad i=1,2.
+\end{fitdisplay}
+Функции выигрыша:
+\begin{fitdisplay}
+J_1=x^{\top}(\vartheta)C_1x(\vartheta)+
+\int_{t_0}^{\vartheta}(u_1^{\top}D_{11}u_1-u_2^{\top}D_{12}u_2+x^{\top}G_1x)dt,
+\end{fitdisplay}
+\begin{fitdisplay}
+J_2=x^{\top}(\vartheta)C_2x(\vartheta)+
+\int_{t_0}^{\vartheta}(-u_1^{\top}D_{21}u_1+u_2^{\top}D_{22}u_2+x^{\top}G_2x)dt.
+\end{fitdisplay}
+
+Равновесие по Бержу:
+\begin{fitdisplay}
+J_1(U_1^B,U_2)\le J_1(U^B)\quad \forall U_2,
+\end{fitdisplay}
+\begin{fitdisplay}
+J_2(U_1,U_2^B)\le J_2(U^B)\quad \forall U_1.
+\end{fitdisplay}
+Главное отличие от Нэша:
+\begin{fitdisplay}
+\begin{aligned}
+\text{Нэш: }& J_i\text{ максимизируется по }u_i,\\
+\text{Бержу: }& J_i\text{ максимизируется по чужому управлению.}
+\end{aligned}
+\end{fitdisplay}
+Значит,
+\begin{fitdisplay}
+J_1\text{ максимизируется по }u_2,
+\qquad
+J_2\text{ максимизируется по }u_1.
+\end{fitdisplay}
+
+Функции Беллмана:
+\begin{fitdisplay}
+V_i(t,x)=x^{\top}\Theta_i(t,\varepsilon)x.
+\end{fitdisplay}
+Условия первого порядка:
+\begin{fitdisplay}
+\frac{\partial W_1}{\partial u_2}=\varepsilon V_{1,x}-2D_{12}u_2=0,
+\end{fitdisplay}
+\begin{fitdisplay}
+\frac{\partial W_2}{\partial u_1}=V_{2,x}-2D_{21}u_1=0.
+\end{fitdisplay}
+Отсюда явный вид равновесных стратегий:
+\begin{fitdisplay}
+u_1^B(t,x)=D_{21}^{-1}\Theta_2(t,\varepsilon)x,
+\end{fitdisplay}
+\begin{fitdisplay}
+u_2^B(t,x)=\varepsilon D_{12}^{-1}\Theta_1(t,\varepsilon)x.
+\end{fitdisplay}
+
+Условия существования в используемой конвенции:
+\begin{fitdisplay}
+C_2\le0,
+\qquad G_2\le0,
+\qquad D_{ij}>0,
+\quad i,j=1,2,
+\end{fitdisplay}
+и \(\varepsilon\) достаточно мало. Тогда существует равновесие по Бержу--Вайсману, а равновесие по Нэшу в этой постановке не существует.
+
+Выигрыши:
+\begin{fitdisplay}
+J_i^B(t_0,x_0)=x_0^{\top}\Theta_i(t_0,\varepsilon)x_0,
+\qquad i=1,2.
+\end{fitdisplay}
+Малый параметр нужен для метода Пуанкаре:
+\begin{fitdisplay}
+\Theta_i(t,\varepsilon)=\Theta_i^{(0)}(t)+\varepsilon\Theta_i^{(1)}(t)+\varepsilon^2\Theta_i^{(2)}(t)+\cdots .
+\end{fitdisplay}
+
+\textbf{Ключевая фраза:} в равновесии по Бержу выигрыш игрока максимизируется стратегией другого игрока; поэтому \(u_1^B\) зависит от \(\Theta_2\), а \(u_2^B\) зависит от \(\Theta_1\) и содержит множитель \(\varepsilon\).
+
+
+\ticket{20}{Максимум по Парето в двухкритериальной линейно-квадратичной динамической задаче}
+\official{20. Максимум по Парето в двухкритериальной линейно-квадратичной динамической задаче.}
+
+Есть два критерия:
+\begin{fitdisplay}
+f(x,y)\to\max,
+\qquad R(x,y)\to\min.
+\end{fitdisplay}
+Чтобы оба критерия были на максимум, пишем
+\begin{fitdisplay}
+G_2=\langle X,Y,\{f(x,y),-R(x,y)\}\rangle .
+\end{fitdisplay}
+Здесь \(x\in X\) -- стратегия, \(y\in Y\) -- неопределенность.
+
+Линейно-квадратичный выигрыш:
+\begin{fitdisplay}
+f(x,y)=x^{\top}Ax+2x^{\top}By+y^{\top}Dy+2a^{\top}x+2d^{\top}y,
+\qquad A=A^{\top},
+\quad D=D^{\top}.
+\end{fitdisplay}
+Риск, или сожаление:
+\begin{fitdisplay}
+R(x,y)=\max_{z\in X}f(z,y)-f(x,y)\ge0.
+\end{fitdisplay}
+Смысл: риск равен потере выигрыша по сравнению с лучшим выбором при уже известном \(y\).
+
+Для фиксированного \(x\) неопределенность \(y^P(x)\) минимальна по Парето, если нельзя одновременно уменьшить выигрыш и увеличить риск. То есть не существует \(y\in Y\), для которого
+\begin{fitdisplay}
+f(x,y)\le f(x,y^P(x)),
+\end{fitdisplay}
+\begin{fitdisplay}
+-R(x,y)\le -R(x,y^P(x)),
+\end{fitdisplay}
+и хотя бы одно неравенство строгое.
+
+Достаточная конструкция:
+\begin{fitdisplay}
+f[y]=\max_{x\in X}f(x,y),
+\end{fitdisplay}
+\begin{fitdisplay}
+y^P(x)\in\arg\min_{y\in Y}\bigl(f(x,y)-\sigma f[y]\bigr),
+\qquad \sigma\in(0,1).
+\end{fitdisplay}
+Тогда \(y^P(x)\) является минимальной по Парето неопределенностью.
+
+Стратегия \(x^P\) максимальна по Парето, если не существует \(x\in X\), такого что
+\begin{fitdisplay}
+f(x,y^P(x))\ge f(x^P,y^P(x^P)),
+\end{fitdisplay}
+\begin{fitdisplay}
+-R(x,y^P(x))\ge -R(x^P,y^P(x^P)),
+\end{fitdisplay}
+и хотя бы одно неравенство строгое.
+
+Динамическая версия: вместо \(f\) берутся два функционала
+\begin{fitdisplay}
+J_1(U,t_0,x_0),
+\qquad J_2(U,t_0,x_0).
+\end{fitdisplay}
+Pareto максимум: нет другого \(U\), который одновременно улучшает \(J_1\) и \(J_2\).
+
+Положительная скаляризация:
+\begin{fitdisplay}
+J_\alpha(U)=J_1(U)+\alpha J_2(U),
+\qquad \alpha>0.
+\end{fitdisplay}
+Если \(U^P\) максимизирует \(J_\alpha\), то \(U^P\) является максимальной по Парето альтернативой.
+
+В LQ-случае после скаляризации:
+\begin{fitdisplay}
+C(\alpha)=C_1+
+\alpha C_2,
+\qquad
+D_j(\alpha)=D_{1j}+\alpha D_{2j}.
+\end{fitdisplay}
+Ищем
+\begin{fitdisplay}
+V^P(t,x)=x^{\top}\Theta^P(t)x.
+\end{fitdisplay}
+Pareto-максимальное управление имеет линейный вид
+\begin{fitdisplay}
+u_j^P(t,x)=-D_j^{-1}(\alpha)\Theta^P(t)x.
+\end{fitdisplay}
+Матрица \(\Theta^P\) находится из уравнения Риккати:
+\begin{fitdisplay}
+\dot\Theta^P+
+\Theta^P A+A^{\top}\Theta^P-
+\Theta^P\left(\sum_jD_j^{-1}(\alpha)\right)\Theta^P=0,
+\end{fitdisplay}
+\begin{fitdisplay}
+\Theta^P(\vartheta)=C(\alpha).
+\end{fitdisplay}
+
+\textbf{Ключевая фраза:} максимум по Парето -- это не один абсолютный максимум, а неулучшаемый компромисс между выигрышем и риском; в LQ-динамике он строится через положительную скаляризацию и Riccati.
+
+\section*{Общая схема блока F}
+\addcontentsline{toc}{section}{Общая схема блока F}
+\begin{fitdisplay}
+\begin{gathered}
+\text{LQ игра}\Rightarrow \text{Bellman-функция }V=x^{\top}\Theta x\\
+\Rightarrow \text{условие максимума}\Rightarrow \text{Riccati}\\
+\Rightarrow \text{линейная позиционная стратегия}.
+\end{gathered}
+\end{fitdisplay}
+\begin{fitdisplay}
+\text{Nash: свой выигрыш по своему управлению.}
+\end{fitdisplay}
+\begin{fitdisplay}
+\text{Berge: свой выигрыш по чужому управлению.}
+\end{fitdisplay}
+\begin{fitdisplay}
+\text{Pareto: нельзя улучшить один критерий без ухудшения другого.}
+\end{fitdisplay}
+
+
+\blocktitle{G}{Риск, гарантированные решения и Cournot}{Билеты 21--23. Краткая версия для запоминания}
+
+\section*{Билет 21. Необходимые и достаточные условия существования стратегий с нулевым риском}
+Рассматривается задача при неопределенности
+\begin{fitdisplay}
+\langle X,Y,f(x,y)\rangle,
+\end{fitdisplay}
+где $x\in X$ --- стратегия ЛПР, $y\in Y$ --- неопределенность, $f(x,y)$ --- выигрыш.
+
+Функция риска, или сожаления:
+\begin{fitdisplay}
+\Phi(x,y)=\max_{z\in X}f(z,y)-f(x,y).
+\end{fitdisplay}
+Она всегда неотрицательна:
+\begin{fitdisplay}
+\Phi(x,y)\ge 0.
+\end{fitdisplay}
+Риск равен нулю тогда и только тогда, когда $x$ оптимальна при данном $y$:
+\begin{fitdisplay}
+\Phi(x,y)=0
+\Longleftrightarrow
+f(x,y)=\max_{z\in X}f(z,y).
+\end{fitdisplay}
+
+Стратегия $x^0$ имеет нулевой риск, если
+\begin{fitdisplay}
+\Phi(x^0,y)=0\qquad \forall y\in Y.
+\end{fitdisplay}
+То есть
+\begin{fitdisplay}
+f(x^0,y)=\max_{z\in X}f(z,y)
+\qquad \forall y\in Y.
+\end{fitdisplay}
+
+Главное необходимое и достаточное условие:
+\begin{fitdisplay}
+\exists x^0\in X:\ \Phi(x^0,y)=0\ \forall y
+\end{fitdisplay}
+эквивалентно
+\begin{fitdisplay}
+\bigcap_{y\in Y}\Argmax_{z\in X}f(z,y)\ne\varnothing.
+\end{fitdisplay}
+
+Эквивалентная минимаксная форма:
+\begin{fitdisplay}
+\min_{x\in X}\max_{y\in Y}\Phi(x,y)=0.
+\end{fitdisplay}
+Если используется язык седловой точки, то должна существовать седловая точка нулевого значения:
+\begin{fitdisplay}
+\max_{y\in Y}\Phi(x^0,y)=\Phi(x^0,y^0)=\min_{x\in X}\Phi(x,y^0)=0.
+\end{fitdisplay}
+Правильное минимаксное неравенство:
+\begin{fitdisplay}
+\max_{y\in Y}\min_{x\in X}\Phi(x,y)
+\le
+\min_{x\in X}\max_{y\in Y}\Phi(x,y).
+\end{fitdisplay}
+
+Итоговая фраза:
+\begin{fitdisplay}
+\begin{gathered}
+\text{нулевой риск }\Longleftrightarrow\\
+\text{одна и та же стратегия оптимальна при всех неопределенностях}.
+\end{gathered}
+\end{fitdisplay}
+
+
+\section*{Билет 22. Гарантированное по Парето равновесие в многошаговой дуополии Курно с учетом импорта}
+Две фирмы выбирают объемы выпуска, импорт является неопределенностью.
+
+Статическая модель:
+\begin{fitdisplay}
+q_1,q_2\ge0,
+\qquad y\ge0,
+\end{fitdisplay}
+\begin{fitdisplay}
+\bar q=q_1+q_2+y,
+\qquad
+p=a-b\bar q,
+\quad a>0,\ b>0.
+\end{fitdisplay}
+Прибыль фирмы $i$:
+\begin{fitdisplay}
+\psi_i(q_1,q_2,y)=\bigl[a-b(q_1+q_2+y)\bigr]q_i-(cq_i+d).
+\end{fitdisplay}
+Для учета неопределенности вводится гарантированный критерий:
+\begin{fitdisplay}
+\Phi_i(q_1,q_2,y)=\psi_i(q_1,q_2,y)+\frac{y^2}{2}.
+\end{fitdisplay}
+
+Парето-гарантированное равновесие строится в три шага:
+\begin{enumerate}
+  \item для каждого $q=(q_1,q_2)$ найти Парето-минимальную неопределенность $y^P(q)$;
+  \item подставить $y=y^P(q)$ и найти равновесие Нэша в игре гарантий;
+  \item вычислить прибыли и гарантированные выигрыши.
+\end{enumerate}
+
+В статической модели:
+\begin{fitdisplay}
+y^P(q)=\frac{b(q_1+q_2)}{2},
+\end{fitdisplay}
+\begin{fitdisplay}
+q_1^e=q_2^e=\frac{a-c}{b(3+b)}.
+\end{fitdisplay}
+Тогда
+\begin{fitdisplay}
+y^P(q^e)=\frac{a-c}{3+b},
+\end{fitdisplay}
+\begin{fitdisplay}
+\psi_i^e=\frac{(a-c)^2}{b(3+b)^2}-d,
+\qquad i=1,2.
+\end{fitdisplay}
+
+Многошаговая версия: состояние
+\begin{fitdisplay}
+q(k)=(q_1(k),q_2(k)).
+\end{fitdisplay}
+Двухшаговая модель:
+\begin{fitdisplay}
+q_1(k+1)=\frac{a-c}{2b}-\frac{q_2(k)}{2}-\frac{z(k)}{2}+u_1(k,q(k)),
+\end{fitdisplay}
+\begin{fitdisplay}
+q_2(k+1)=\frac{a-c}{2b}-\frac{q_1(k)}{2}-\frac{z(k)}{2}+u_2(k,q(k)),
+\qquad k=0,1.
+\end{fitdisplay}
+Выигрыши:
+\begin{fitdisplay}
+J_i(U,Z,q_0)=[q_i(2)]^2+\sum_{k=0}^{1}\left(q_i(k)-2u_i^2(k)+\frac{z^2(k)}{2}\right).
+\end{fitdisplay}
+
+Определение:
+\begin{fitdisplay}
+(U^e,J_1^e[q_0],J_2^e[q_0])
+\end{fitdisplay}
+--- гарантированное по Парето равновесие, если существует $Z^P$, такое что:
+\begin{fitdisplay}
+Z^P \text{ минимальна по Парето по неопределенности},
+\end{fitdisplay}
+\begin{fitdisplay}
+U^e \text{ является равновесием Нэша при } Z=Z^P,
+\end{fitdisplay}
+\begin{fitdisplay}
+J_i^e[q_0]=J_i(U^e,Z^P,q_0).
+\end{fitdisplay}
+Алгоритм: обратная индукция
+\begin{fitdisplay}
+k=2\rightarrow k=1\rightarrow k=0.
+\end{fitdisplay}
+Терминальные функции:
+\begin{fitdisplay}
+V_i^{(2)}(q)=q_i^2.
+\end{fitdisplay}
+На каждом предыдущем шаге сначала ищем $z^P(k,q,u)$, затем равновесные управления $u_i^e(k,q)$, затем функции $V_i^{(k)}(q)$. В итоге
+\begin{fitdisplay}
+J_i^e[q_0]=V_i^{(0)}(q_0).
+\end{fitdisplay}
+
+Главная фраза:
+\begin{fitdisplay}
+\begin{gathered}
+\text{сначала Парето-минимальная неопределенность импорта,}\\
+\text{затем Нэш методом обратной индукции.}
+\end{gathered}
+\end{fitdisplay}
+
+
+\section*{Билет 23. Гарантированное по выигрышам и рискам равновесие в ЛК-игре двух лиц}
+Игра двух лиц при неопределенности:
+\begin{fitdisplay}
+X_1=X_2=\R^n,
+\qquad Y=\R^m.
+\end{fitdisplay}
+Выигрыши:
+\begin{fitdisplay}
+f_1=x_1^\top A_1x_1+2x_1^\top x_2+y^\top D_1y+2a_1^\top x_1+2d_1^\top y,
+\end{fitdisplay}
+\begin{fitdisplay}
+f_2=x_2^\top A_2x_2-2x_2^\top x_1+y^\top D_2y+2a_2^\top x_2+2d_2^\top y.
+\end{fitdisplay}
+Условия:
+\begin{fitdisplay}
+A_i=A_i^\top<0,
+\qquad D_i=D_i^\top>0.
+\end{fitdisplay}
+$A_i<0$ нужно для существования максимума по собственной стратегии, $D_i>0$ --- для корректного построения $y^P$.
+
+Лучшие выигрыши:
+\begin{fitdisplay}
+f_1[x_2,y]=\max_{x_1}f_1(x_1,x_2,y),
+\end{fitdisplay}
+\begin{fitdisplay}
+f_2[x_1,y]=\max_{x_2}f_2(x_1,x_2,y).
+\end{fitdisplay}
+При $A_i<0$:
+\begin{fitdisplay}
+f_1[x_2,y]=-(x_2+a_1)^\top A_1^{-1}(x_2+a_1)+y^\top D_1y+2d_1^\top y,
+\end{fitdisplay}
+\begin{fitdisplay}
+f_2[x_1,y]=-(x_1-a_2)^\top A_2^{-1}(x_1-a_2)+y^\top D_2y+2d_2^\top y.
+\end{fitdisplay}
+
+Риски:
+\begin{fitdisplay}
+R_1=f_1[x_2,y]-f_1(x_1,x_2,y),
+\end{fitdisplay}
+\begin{fitdisplay}
+R_2=f_2[x_1,y]-f_2(x_1,x_2,y).
+\end{fitdisplay}
+Всегда $R_i\ge0$.
+
+Гарантированное по выигрышам и рискам равновесие --- пятерка
+\begin{fitdisplay}
+(x^e,f_1^P,f_2^P,R_1^P,R_2^P),
+\end{fitdisplay}
+для которой существует $y^P$, такое что
+\begin{fitdisplay}
+f_i^P=f_i(x^e,y^P),
+\qquad
+R_i^P=R_i(x^e,y^P).
+\end{fitdisplay}
+Условия:
+\begin{enumerate}
+  \item $x^e$ --- равновесие Нэша при фиксированном $y=y^P$;
+  \item $y^P$ --- минимальная по Парето неопределенность в четырехкритериальной задаче
+  \begin{fitdisplay}
+  \{f_1,-R_1,f_2,-R_2\}.
+  \end{fitdisplay}
+\end{enumerate}
+
+В данной ЛК-модели
+\begin{fitdisplay}
+y^P=-(D_1+D_2)^{-1}(d_1+d_2).
+\end{fitdisplay}
+Равновесие Нэша при $y=y^P$ находится из системы
+\begin{fitdisplay}
+A_1x_1^e+x_2^e=-a_1,
+\end{fitdisplay}
+\begin{fitdisplay}
+-x_1^e+A_2x_2^e=-a_2.
+\end{fitdisplay}
+При выбранной конвенции знаков:
+\begin{fitdisplay}
+x_1^e=(A_2A_1+E_n)^{-1}(a_2-A_2a_1),
+\end{fitdisplay}
+\begin{fitdisplay}
+x_2^e=-(A_1A_2+E_n)^{-1}(a_1+A_1a_2).
+\end{fitdisplay}
+Гарантированные выигрыши и риски:
+\begin{fitdisplay}
+f_i^P=f_i(x^e,y^P),
+\qquad
+R_i^P=R_i(x^e,y^P).
+\end{fitdisplay}
+Так как $x^e$ --- Nash при $y^P$, то
+\begin{fitdisplay}
+R_1^P=R_2^P=0.
+\end{fitdisplay}
+
+Главная фраза:
+\begin{fitdisplay}
+\text{сначала }y^P\text{ по критериям }\{f_1,-R_1,f_2,-R_2\},
+\text{ затем Нэш при фиксированном }y^P.
+\end{fitdisplay}
+
+
+\blocktitle{H}{Экономические модели технологии, ресурсов и климата}{Билеты 24--26. Краткая версия для запоминания}
+
+\section{Билет 24. Математические модели технического прогресса}
+
+\textbf{Официальная формулировка:} Математические модели технического прогресса (экзогенный и эндогенный прогресс). Задачи оптимизации подходы к решению.
+
+Технический прогресс -- это рост выпуска, не сводимый только к росту капитала $K$ и труда $L$. Главное деление:
+\begin{fitdisplay}
+\text{экзогенный прогресс}\qquad\text{и}\qquad\text{эндогенный прогресс}.
+\end{fitdisplay}
+
+\subsection*{1. Экзогенный технический прогресс}
+Технология задается извне:
+\begin{fitdisplay}
+Y(t)=F(K(t),A(t)L(t)),
+\end{fitdisplay}
+\begin{fitdisplay}
+\dot A(t)=gA(t),\qquad \dot L(t)=nL(t).
+\end{fitdisplay}
+Капитал:
+\begin{fitdisplay}
+\dot K(t)=I(t)-\delta K(t).
+\end{fitdisplay}
+Если $I(t)=sY(t)$, то модель Солоу--Свона:
+\begin{fitdisplay}
+\dot K=sF(K,AL)-\delta K.
+\end{fitdisplay}
+В переменных на единицу эффективного труда
+\begin{fitdisplay}
+k=\frac{K}{AL}
+\end{fitdisplay}
+получаем
+\begin{fitdisplay}
+\dot k=sf(k)-(\delta+n+g)k.
+\end{fitdisplay}
+Смысл: $g$ -- внешний темп технического прогресса.
+
+\subsection*{2. Ramsey с экзогенным прогрессом}
+Если выбирается потребление, получаем задачу оптимального управления:
+\begin{fitdisplay}
+\max_{C(\cdot)}\int_0^\infty e^{-\rho t}U(c(t))L(t)\,dt
+\end{fitdisplay}
+при
+\begin{fitdisplay}
+\dot K=F(K,AL)-C-\delta K.
+\end{fitdisplay}
+Current-value Hamiltonian:
+\begin{fitdisplay}
+\mathcal H=U(c)+\lambda[f(k)-c-(\delta+n+g)k].
+\end{fitdisplay}
+Условие максимума:
+\begin{fitdisplay}
+U'(c)=\lambda.
+\end{fitdisplay}
+Сопряженное уравнение:
+\begin{fitdisplay}
+\dot\lambda=\lambda(\rho+\delta+n+g-f'(k)).
+\end{fitdisplay}
+Трансверсальность:
+\begin{fitdisplay}
+\lim_{t\to\infty}e^{-\rho t}\lambda(t)k(t)=0.
+\end{fitdisplay}
+
+\subsection*{3. Эндогенный технический прогресс}
+Технология возникает внутри модели:
+\begin{fitdisplay}
+Y=F(K,L,A,H).
+\end{fitdisplay}
+Здесь $A(t)$ -- знания / технология, $H(t)$ -- человеческий капитал.
+
+Пример модели с человеческим капиталом:
+\begin{fitdisplay}
+Y=K^\alpha(uH)^{1-\alpha},
+\end{fitdisplay}
+\begin{fitdisplay}
+\dot K=Y-C-\delta K,
+\end{fitdisplay}
+\begin{fitdisplay}
+\dot H=B(1-u)H.
+\end{fitdisplay}
+Управления:
+\begin{fitdisplay}
+C(t),\quad u(t).
+\end{fitdisplay}
+Смысл: $u$ -- доля человеческого капитала в производстве, $1-u$ -- доля в образовании.
+
+\subsection*{4. R\&D / знания}
+Можно писать:
+\begin{fitdisplay}
+\dot A=\Phi(A,L_A,A_F),
+\end{fitdisplay}
+например
+\begin{fitdisplay}
+\dot A=\beta L_AA
+\end{fitdisplay}
+или
+\begin{fitdisplay}
+\dot A=\beta L_A(A_F-A).
+\end{fitdisplay}
+Здесь $L_A$ -- труд в секторе НИОКР, $A_F$ -- внешний технологический уровень.
+
+\subsection*{5. Подходы к решению}
+\begin{enumerate}
+\item Принцип максимума Понтрягина:
+\begin{fitdisplay}
+H=F_0(x,u)+\psi^\top f(x,u),
+\end{fitdisplay}
+\begin{fitdisplay}
+\dot\psi=\rho\psi-H_x,
+\end{fitdisplay}
+\begin{fitdisplay}
+H(x^*,u^*,\psi)=\max_u H(x^*,u,\psi).
+\end{fitdisplay}
+\item Метод Беллмана:
+\begin{fitdisplay}
+\rho V(x)=\max_u\{F_0(x,u)+V_xf(x,u)\}.
+\end{fitdisplay}
+\item Анализ steady state / balanced growth path.
+\end{enumerate}
+
+\textbf{Главная фраза:}
+\begin{center}
+\fbox{\begin{minipage}{0.86\linewidth}
+В экзогенных моделях $A(t)$ задана извне; в эндогенных моделях $A(t)$ или $H(t)$ являются состояниями и зависят от инвестиций в знания, образование и НИОКР.
+\end{minipage}}
+\end{center}
+
+\section{Билет 25. Оптимальная добыча невозобновляемых ресурсов}
+
+\textbf{Официальная формулировка:} Математические модели оптимальной добычи невозобновляемых ресурсов. Задачи оптимизации подходы к решению.
+
+Невозобновляемый ресурс не восстанавливается на рассматриваемом горизонте.
+
+Фазовая переменная:
+\begin{fitdisplay}
+R(t)\ge 0
+\end{fitdisplay}
+-- запас ресурса.
+
+Управление:
+\begin{fitdisplay}
+E(t)
+\end{fitdisplay}
+-- интенсивность добычи.
+
+Динамика:
+\begin{fitdisplay}
+\dot R(t)=-E(t),\qquad R(0)=R_0>0.
+\end{fitdisplay}
+Ограничение:
+\begin{fitdisplay}
+0\le E(t)\le E_{\max}.
+\end{fitdisplay}
+Функционал прибыли:
+\begin{fitdisplay}
+J(E,T)=\int_0^T e^{-rt}[p(t)E(t)-C(E(t),R(t))]dt\to\max.
+\end{fitdisplay}
+Возможные условия:
+\begin{fitdisplay}
+R(T)=0
+\end{fitdisplay}
+при полном исчерпании; $T$ может быть заданным или свободным.
+
+\subsection*{ПМП}
+Гамильтониан:
+\begin{fitdisplay}
+H=e^{-rt}[p(t)E-C(E,R)]-\psi E.
+\end{fitdisplay}
+Сопряженное уравнение:
+\begin{fitdisplay}
+\dot\psi=-H_R=e^{-rt}C_R(E,R).
+\end{fitdisplay}
+Условие максимума:
+\begin{fitdisplay}
+E^*(t)\in\argmax_{0\le E\le E_{\max}}\{e^{-rt}[p(t)E-C(E,R^*)]-\psi E\}.
+\end{fitdisplay}
+Если максимум внутренний:
+\begin{fitdisplay}
+e^{-rt}[p(t)-C_E(E^*,R^*)]=\psi(t).
+\end{fitdisplay}
+Экономический смысл: $\psi(t)$ -- теневая цена единицы ресурса в недрах.
+
+\subsection*{Bang-bang случай}
+Если $C=0$, то
+\begin{fitdisplay}
+H=(e^{-rt}p(t)-\psi(t))E.
+\end{fitdisplay}
+Поэтому
+\begin{fitdisplay}
+e^{-rt}p(t)>\psi(t)\Rightarrow E^*(t)=E_{\max},
+\end{fitdisplay}
+\begin{fitdisplay}
+e^{-rt}p(t)<\psi(t)\Rightarrow E^*(t)=0.
+\end{fitdisplay}
+При равенстве возможен особый режим.
+
+\subsection*{Правило Хотеллинга}
+Чистая цена ресурса:
+\begin{fitdisplay}
+\pi(t)=p(t)-c(t).
+\end{fitdisplay}
+Правило Хотеллинга:
+\begin{fitdisplay}
+\frac{\dot\pi(t)}{\pi(t)}=r.
+\end{fitdisplay}
+Если $c(t)=0$, то
+\begin{fitdisplay}
+\frac{\dot p(t)}{p(t)}=r,
+\end{fitdisplay}
+\begin{fitdisplay}
+p(t)=p_0e^{rt}.
+\end{fitdisplay}
+Смысл: ресурс в недрах должен приносить ту же доходность, что и финансовый актив.
+
+\subsection*{Модель Дасгупты--Хила}
+Ресурс входит в производство:
+\begin{fitdisplay}
+Y=F(K,E).
+\end{fitdisplay}
+Баланс:
+\begin{fitdisplay}
+Y=C+I.
+\end{fitdisplay}
+Капитал:
+\begin{fitdisplay}
+\dot K=I-\delta K.
+\end{fitdisplay}
+Ресурс:
+\begin{fitdisplay}
+\dot R=-E.
+\end{fitdisplay}
+Задача:
+\begin{fitdisplay}
+\max\int_0^\infty e^{-\rho t}U(C(t))dt.
+\end{fitdisplay}
+Вывод: оптимальная политика балансирует текущее потребление, накопление капитала и сохранение ресурса.
+
+\textbf{Главная фраза:}
+\begin{center}
+\fbox{\begin{minipage}{0.86\linewidth}
+Оптимальная добыча определяется сравнением текущей предельной ренты от добычи с теневой ценой ресурса; в классической модели Хотеллинга чистая цена ресурса растет с темпом $r$.
+\end{minipage}}
+\end{center}
+
+\section{Билет 26. Интегрированные модели климата и экономики. DICE}
+
+\textbf{Официальная формулировка:} Интегрированные модели климата и экономики. Модель DICE. Задачи оптимизации подходы к решению.
+
+DICE:
+\begin{fitdisplay}
+\text{Dynamic Integrated model of Climate and the Economy}.
+\end{fitdisplay}
+Это integrated assessment model, соединяющая
+\begin{fitdisplay}
+\begin{gathered}
+\text{экономический рост}\to\text{выбросы}\to\text{углеродный цикл}\\
+\to\text{температура}\to\text{ущерб}\to\text{общественное благосостояние}.
+\end{gathered}
+\end{fitdisplay}
+
+\subsection*{1. Целевая функция}
+DICE максимизирует общественное благосостояние:
+\begin{fitdisplay}
+W=\sum_{t=1}^{T}R(t)U(c(t),L(t))\to\max.
+\end{fitdisplay}
+Обычно
+\begin{fitdisplay}
+U(c,L)=L\frac{c^{1-\alpha}}{1-\alpha},
+\end{fitdisplay}
+\begin{fitdisplay}
+c(t)=\frac{C(t)}{L(t)}.
+\end{fitdisplay}
+Дисконтирование:
+\begin{fitdisplay}
+R(t)=(1+\rho)^{-t}.
+\end{fitdisplay}
+
+\subsection*{2. Экономический блок}
+Валовой выпуск:
+\begin{fitdisplay}
+Y_{\mathrm{gross}}(t)=A(t)K^\gamma(t)L^{1-\gamma}(t).
+\end{fitdisplay}
+Капитал:
+\begin{fitdisplay}
+K(t+1)=(1-\delta)^hK(t)+hI(t).
+\end{fitdisplay}
+Баланс:
+\begin{fitdisplay}
+Y(t)=C(t)+I(t).
+\end{fitdisplay}
+Управление:
+\begin{fitdisplay}
+s(t)=\frac{I(t)}{Y(t)}.
+\end{fitdisplay}
+
+\subsection*{3. Ущерб и издержки снижения выбросов}
+Климатический ущерб:
+\begin{fitdisplay}
+\Omega(t)=\psi_1T_{\mathrm{AT}}(t)+\psi_2T_{\mathrm{AT}}^2(t).
+\end{fitdisplay}
+Издержки снижения выбросов:
+\begin{fitdisplay}
+\Lambda(t)=\theta_1(t)\mu(t)^{\theta_2}.
+\end{fitdisplay}
+Чистый выпуск:
+\begin{fitdisplay}
+Y(t)=\frac{1-\Lambda(t)}{1+\Omega(t)}Y_{\mathrm{gross}}(t).
+\end{fitdisplay}
+
+\subsection*{4. Выбросы}
+Промышленные выбросы:
+\begin{fitdisplay}
+E_{\mathrm{ind}}(t)=\sigma(t)(1-\mu(t))Y_{\mathrm{gross}}(t).
+\end{fitdisplay}
+Полные выбросы:
+\begin{fitdisplay}
+E(t)=E_{\mathrm{ind}}(t)+E_{\mathrm{land}}(t).
+\end{fitdisplay}
+Управление:
+\begin{fitdisplay}
+\mu(t)\in[0,1]
+\end{fitdisplay}
+-- emissions control rate.
+
+\subsection*{5. Углеродный цикл}
+Три резервуара:
+\begin{fitdisplay}
+M_{\mathrm{AT}},\quad M_{\mathrm{UP}},\quad M_{\mathrm{LO}}.
+\end{fitdisplay}
+Схема:
+\begin{fitdisplay}
+M(t+1)=\Phi M(t)+BE(t).
+\end{fitdisplay}
+Смысл: выбросы попадают в атмосферу, затем перераспределяются между атмосферой, верхним океаном / биосферой и глубоким океаном.
+
+\subsection*{6. Радиационное воздействие}
+\begin{fitdisplay}
+F(t)=\eta\log_2\left(\frac{M_{\mathrm{AT}}(t)}{M_{\mathrm{AT}}^{1750}}\right)+F_{\mathrm{EX}}(t).
+\end{fitdisplay}
+
+\subsection*{7. Температурный блок}
+Температуры:
+\begin{fitdisplay}
+T_{\mathrm{AT}}(t)
+\end{fitdisplay}
+-- атмосфера / поверхность,
+\begin{fitdisplay}
+T_{\mathrm{LO}}(t)
+\end{fitdisplay}
+-- глубокий океан.
+
+Типично:
+\begin{fitdisplay}
+T_{\mathrm{AT}}(t+1)=T_{\mathrm{AT}}(t)+\xi_1[F(t)-\xi_2T_{\mathrm{AT}}(t)-\xi_3(T_{\mathrm{AT}}(t)-T_{\mathrm{LO}}(t))],
+\end{fitdisplay}
+\begin{fitdisplay}
+T_{\mathrm{LO}}(t+1)=T_{\mathrm{LO}}(t)+\xi_4(T_{\mathrm{AT}}(t)-T_{\mathrm{LO}}(t)).
+\end{fitdisplay}
+
+\subsection*{8. Оптимизационная задача}
+Управления:
+\begin{fitdisplay}
+s(t),\quad \mu(t).
+\end{fitdisplay}
+Задача:
+\begin{fitdisplay}
+\max_{\{s(t),\mu(t)\}}\sum_t R(t)L(t)\frac{c(t)^{1-\alpha}}{1-\alpha}
+\end{fitdisplay}
+при экономических и климатических ограничениях.
+
+\subsection*{9. Подходы к решению}
+DICE решается как дискретная задача нелинейного программирования:
+\begin{fitdisplay}
+\max W
+\end{fitdisplay}
+при системе нелинейных уравнений и ограничений. На практике используются GAMS / NLP solver / CONOPT / Excel Solver. Bellman и ПМП можно использовать как теоретическую интерпретацию, но основная реализация DICE -- прямое нелинейное программирование.
+
+\textbf{Главная фраза:}
+\begin{center}
+\fbox{\begin{minipage}{0.86\linewidth}
+DICE выбирает траектории сбережений $s(t)$ и сокращения выбросов $\mu(t)$, максимизируя дисконтированное благосостояние и связывая экономический рост с углеродным циклом, температурой и климатическим ущербом.
+\end{minipage}}
+\end{center}
+
+
+\blocktitle{I}{Дифференциальные игры и конкурентная реклама}{Билеты 27--29. Краткая версия для запоминания}
+
+\section{Билет 27. Неантагонистические дифференциальные игры. Nash в программных и позиционных стратегиях}
+
+Игра $N$ лиц:
+\begin{fitdisplay}
+ \dot x=f(t,x,u_1,\ldots,u_N),\qquad x(t_0)=x_0.
+\end{fitdisplay}
+Выигрыш игрока $i$:
+\begin{fitdisplay}
+ J_i=\int_{t_0}^{T}F_i(t,x,u_1,\ldots,u_N)\,dt+q_i(x(T)).
+\end{fitdisplay}
+Игра неантагонистическая: выигрыши игроков не обязаны быть противоположными, то есть это не нулевая сумма.
+
+\textbf{Равновесие по Нэшу:}
+\begin{fitdisplay}
+ u^*=(u_1^*,\ldots,u_N^*)
+\end{fitdisplay}
+таково, что
+\begin{fitdisplay}
+ J_i(u_i,u_{-i}^*)\le J_i(u_i^*,u_{-i}^*)\qquad \forall u_i,\quad i=1,\ldots,N.
+\end{fitdisplay}
+
+\subsection*{1. Программные стратегии}
+
+\begin{fitdisplay}
+ u_i=u_i(t).
+\end{fitdisplay}
+Они зависят от времени, но не от текущего состояния.
+
+Гамильтониан игрока $i$:
+\begin{fitdisplay}
+ H_i=F_i+\langle\psi_i,f\rangle.
+\end{fitdisplay}
+У каждого игрока своя сопряженная переменная $\psi_i$.
+
+Необходимые условия PMP:
+\begin{fitdisplay}
+ \dot x^*=f(t,x^*,u_1^*,\ldots,u_N^*),
+\end{fitdisplay}
+\begin{fitdisplay}
+ \dot\psi_i=-H_{i,x},
+\end{fitdisplay}
+\begin{fitdisplay}
+ \psi_i(T)=q_{i,x}(x^*(T)),
+\end{fitdisplay}
+\begin{fitdisplay}
+ u_i^*(t)\in\argmax_{v_i\in U_i}H_i(t,x^*,u_1^*,\ldots,u_{i-1}^*,v_i,u_{i+1}^*,\ldots,u_N^*,\psi_i).
+\end{fitdisplay}
+
+\subsection*{2. Позиционные стратегии}
+
+\begin{fitdisplay}
+ u_i=\varphi_i(t,x).
+\end{fitdisplay}
+Они зависят от текущего состояния. Состоятельное позиционное равновесие описывается системой HJB.
+
+Функции Беллмана:
+\begin{fitdisplay}
+ V_i(t,x),\qquad V_i(T,x)=q_i(x).
+\end{fitdisplay}
+Система:
+\begin{fitdisplay}
+ -V_{i,t}(t,x)=\max_{v_i\in U_i}\{F_i(t,x,\varphi_{-i}^*,v_i)+V_{i,x}(t,x)f(t,x,\varphi_{-i}^*,v_i)\}.
+\end{fitdisplay}
+Равновесная обратная связь:
+\begin{fitdisplay}
+ \varphi_i^*(t,x)\in\argmax_{v_i\in U_i}\{F_i(t,x,\varphi_{-i}^*,v_i)+V_{i,x}f(t,x,\varphi_{-i}^*,v_i)\}.
+\end{fitdisplay}
+
+\textbf{Главная фраза:}
+\begin{quote}
+Program Nash: PMP для каждого игрока. Feedback Nash: система HJB.
+\end{quote}
+
+
+\section{Билет 28. Дифференциальные игры с бесконечной продолжительностью}
+
+Игра $N$ лиц на $[t_0,+\infty)$:
+\begin{fitdisplay}
+ \dot x=f(t,x,u_1,\ldots,u_N),\qquad x(t_0)=x_0.
+\end{fitdisplay}
+Выигрыш игрока $i$:
+\begin{fitdisplay}
+ J_i=\int_{t_0}^{+\infty}e^{-r(t-t_0)}F_i(t,x,u_1,\ldots,u_N)\,dt.
+\end{fitdisplay}
+Нужно обеспечить сходимость $J_i$; одного условия $r>0$ вообще недостаточно.
+
+\subsection*{1. Программные стратегии}
+
+\begin{fitdisplay}
+ u_i=u_i(t).
+\end{fitdisplay}
+Nash equilibrium:
+\begin{fitdisplay}
+ J_i(u_i,u_{-i}^*)\le J_i(u_i^*,u_{-i}^*)\qquad \forall u_i,\quad i=1,\ldots,N.
+\end{fitdisplay}
+
+Present-value Hamiltonian:
+\begin{fitdisplay}
+ \mathcal H_i=e^{-r(t-t_0)}F_i+\langle\psi_i,f\rangle.
+\end{fitdisplay}
+Current-value переменная:
+\begin{fitdisplay}
+ p_i(t)=e^{r(t-t_0)}\psi_i(t),\qquad \psi_i(t)=e^{-r(t-t_0)}p_i(t).
+\end{fitdisplay}
+Current-value Hamiltonian:
+\begin{fitdisplay}
+ H_i=F_i+\langle p_i,f\rangle.
+\end{fitdisplay}
+Необходимые условия:
+\begin{fitdisplay}
+ u_i^*(t)\in\argmax_{v_i\in U_i}H_i(t,x^*,u_{-i}^*,v_i,p_i),
+\end{fitdisplay}
+\begin{fitdisplay}
+ \dot p_i=rp_i-\frac{\partial H_i}{\partial x}.
+\end{fitdisplay}
+На бесконечности требуется условие трансверсальности, например
+\begin{fitdisplay}
+ \lim_{t\to\infty}\langle\psi_i(t),x^*(t)\rangle=0,
+\end{fitdisplay}
+или другая подходящая форма в конкретной модели.
+
+\subsection*{2. Позиционные стратегии}
+
+\begin{fitdisplay}
+ u_i=\varphi_i(t,x),
+\end{fitdisplay}
+а в автономной задаче обычно
+\begin{fitdisplay}
+ u_i=\varphi_i(x).
+\end{fitdisplay}
+Состоятельное позиционное равновесие описывается стационарной системой Беллмана:
+\begin{fitdisplay}
+ rV_i(x)=\max_{v_i\in U_i}\{F_i(x,\varphi_{-i}^*(x),v_i)+V_{i,x}(x)f(x,\varphi_{-i}^*(x),v_i)\}.
+\end{fitdisplay}
+Равновесная стратегия:
+\begin{fitdisplay}
+ \varphi_i^*(x)\in\argmax_{v_i\in U_i}\{F_i(x,\varphi_{-i}^*(x),v_i)+V_{i,x}(x)f(x,\varphi_{-i}^*(x),v_i)\}.
+\end{fitdisplay}
+
+\textbf{Главная фраза:}
+\begin{quote}
+На бесконечном горизонте программный Nash задается PMP с current-value переменными и условием трансверсальности; позиционный Nash задается стационарной системой Беллмана: $rV_i=\max\{F_i+V_{i,x}f\}$.
+\end{quote}
+
+
+\section{Билет 29. Модель конкурентной рекламы с двумя участниками}
+
+Две фирмы конкурируют на рынке фиксированного размера.
+\begin{fitdisplay}
+ x(t)\in[0,1]
+\end{fitdisplay}
+-- доля рынка первой фирмы,
+\begin{fitdisplay}
+ 1-x(t)
+\end{fitdisplay}
+-- доля второй фирмы.
+
+Управления:
+\begin{fitdisplay}
+ u_1(t),u_2(t)\ge0
+\end{fitdisplay}
+-- расходы на рекламу.
+
+Динамика:
+\begin{fitdisplay}
+ \dot x=u_1\sqrt{1-x}-u_2\sqrt{x},\qquad x(0)=x_0.
+\end{fitdisplay}
+Реклама первой фирмы увеличивает $x$, реклама второй уменьшает $x$.
+
+\subsection*{Функционалы}
+
+\begin{fitdisplay}
+ J_1=\int_0^T\left(q_1x-\frac{c_1}{2}u_1^2\right)e^{-rt}\,dt+e^{-rT}S_1x(T).
+\end{fitdisplay}
+\begin{fitdisplay}
+ J_2=\int_0^T\left(q_2(1-x)-\frac{c_2}{2}u_2^2\right)e^{-rt}\,dt+e^{-rT}S_2(1-x(T)).
+\end{fitdisplay}
+
+\subsection*{1. Программное равновесие}
+
+Hamiltonian первой фирмы:
+\begin{fitdisplay}
+ H_1=e^{-rt}\left(q_1x-\frac{c_1}{2}u_1^2\right)+\Lambda_1(u_1\sqrt{1-x}-u_2\sqrt{x}).
+\end{fitdisplay}
+Hamiltonian второй фирмы:
+\begin{fitdisplay}
+ H_2=e^{-rt}\left(q_2(1-x)-\frac{c_2}{2}u_2^2\right)+\Lambda_2(u_1\sqrt{1-x}-u_2\sqrt{x}).
+\end{fitdisplay}
+
+Условия максимума:
+\begin{fitdisplay}
+ u_1^*=\frac{\Lambda_1}{c_1}e^{rt}\sqrt{1-x^*},
+\end{fitdisplay}
+\begin{fitdisplay}
+ u_2^*=-\frac{\Lambda_2}{c_2}e^{rt}\sqrt{x^*}.
+\end{fitdisplay}
+При ограничениях $u_i\ge0$ нужно брать положительную часть этих выражений.
+
+Сопряженные уравнения:
+\begin{fitdisplay}
+ \dot\Lambda_1=-q_1e^{-rt}+\Lambda_1\left(\frac{u_1^*}{2\sqrt{1-x^*}}+\frac{u_2^*}{2\sqrt{x^*}}\right),
+\end{fitdisplay}
+\begin{fitdisplay}
+ \dot\Lambda_2=q_2e^{-rt}+\Lambda_2\left(\frac{u_1^*}{2\sqrt{1-x^*}}+\frac{u_2^*}{2\sqrt{x^*}}\right).
+\end{fitdisplay}
+Терминальные условия:
+\begin{fitdisplay}
+ \Lambda_1(T)=e^{-rT}S_1,
+\end{fitdisplay}
+\begin{fitdisplay}
+ \Lambda_2(T)=-e^{-rT}S_2.
+\end{fitdisplay}
+
+\subsection*{2. Позиционное равновесие}
+
+Ищем функции Беллмана:
+\begin{fitdisplay}
+ V_1(t,x)=e^{-rt}(A_1(t)x+B_1(t)),
+\end{fitdisplay}
+\begin{fitdisplay}
+ V_2(t,x)=e^{-rt}(A_2(t)(1-x)+B_2(t)).
+\end{fitdisplay}
+Тогда
+\begin{fitdisplay}
+ V_{1x}=e^{-rt}A_1(t),\qquad V_{2x}=-e^{-rt}A_2(t).
+\end{fitdisplay}
+
+Равновесные обратные связи:
+\begin{fitdisplay}
+ \varphi_1^*(t,x)=\frac{A_1(t)}{c_1}\sqrt{1-x},
+\end{fitdisplay}
+\begin{fitdisplay}
+ \varphi_2^*(t,x)=\frac{A_2(t)}{c_2}\sqrt{x}.
+\end{fitdisplay}
+
+Коэффициенты определяются системой:
+\begin{fitdisplay}
+ \dot A_1=rA_1-q_1+\frac{A_1^2}{2c_1}+\frac{A_1A_2}{c_2},
+\end{fitdisplay}
+\begin{fitdisplay}
+ \dot B_1=rB_1-\frac{A_1^2}{2c_1},
+\end{fitdisplay}
+\begin{fitdisplay}
+ \dot A_2=rA_2-q_2+\frac{A_1A_2}{c_1}+\frac{A_2^2}{2c_2},
+\end{fitdisplay}
+\begin{fitdisplay}
+ \dot B_2=rB_2-\frac{A_2^2}{2c_2}.
+\end{fitdisplay}
+Терминальные условия:
+\begin{fitdisplay}
+ A_1(T)=S_1,\quad B_1(T)=0,
+\end{fitdisplay}
+\begin{fitdisplay}
+ A_2(T)=S_2,\quad B_2(T)=0.
+\end{fitdisplay}
+
+Равновесная динамика:
+\begin{fitdisplay}
+ \dot x=\frac{A_1(t)}{c_1}(1-x)-\frac{A_2(t)}{c_2}x.
+\end{fitdisplay}
+
+\textbf{Главная фраза:}
+\begin{quote}
+В модели конкурентной рекламы программное равновесие строится по PMP, а позиционное -- через линейные по доле рынка функции Беллмана.
+\end{quote}
+\end{multicols}
+\end{document}

@@ -1,0 +1,122 @@
+% !TEX program = xelatex
+\documentclass[12pt,a4paper]{article}
+
+\usepackage{geometry}
+\geometry{left=2.2cm,right=2.2cm,top=2.2cm,bottom=2.4cm}
+
+\usepackage{fontspec}
+\usepackage{xeCJK}
+\IfFontExistsTF{Times New Roman}{%
+  \setmainfont{Times New Roman}
+}{%
+  % Times New Roman is not installed in this environment; Tinos is a metric-compatible substitute.
+  \setmainfont{Tinos}
+}
+\setCJKmainfont{Noto Serif CJK SC}
+\setCJKsansfont{Noto Sans CJK SC}
+
+\usepackage{amsmath,amssymb}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true,linkcolor=black,urlcolor=black}
+\setlist{nosep,leftmargin=2em}
+\linespread{1.15}
+
+\newcommand{\term}[2]{#1（#2）}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\inner}[2]{\left\langle #1,#2\right\rangle}
+
+\begin{document}
+
+\begin{center}
+    {\LARGE \textbf{第八号签}}\\[0.5em]
+    {\large \textbf{无限时间区间上的最优性充分条件}}\\[0.25em]
+    {\large Достаточные условия оптимальности для задач на бесконечном интервале времени}
+\end{center}
+
+\vspace{1em}
+
+\section*{一、问题设定（Постановка）}
+
+考虑如下\term{最优控制问题}{задача оптимального управления}：
+\begin{equation}
+    \dot{x}(t)=f(x(t),u(t)),\qquad u(t)\in U,\qquad x(0)=x_0,
+\end{equation}
+\begin{equation}
+    J(x,u)=\int_0^{\infty} e^{-\rho t}g(x(t),u(t))\,dt\to \max .
+\end{equation}
+
+设 $(x^*,u^*)$ 是一个\term{可行对}{допустимая пара}。假设存在\term{伴随变量}{сопряженная переменная} $\psi(t)$，使得在\term{正常形式}{нормальная форма}下满足\term{庞特里亚金最大值原理}{принцип максимума Понтрягина, ПМП}：
+\begin{equation}
+    \dot{\psi}(t)=-H_x(x^*(t),t,u^*(t),\psi(t)),
+\end{equation}
+\begin{equation}
+    H(x^*(t),t,u^*(t),\psi(t))
+    =\max_{u\in U}H(x^*(t),t,u,\psi(t))
+\end{equation}
+对几乎所有 $t\ge 0$ 成立。其中\term{哈密顿函数}{гамильтониан}为
+\begin{equation}
+    H(x,t,u,\psi)=\inner{f(x,u)}{\psi}+e^{-\rho t}g(x,u).
+\end{equation}
+
+引入\term{最大化后的哈密顿函数}{максимизированный гамильтониан}：
+\begin{equation}
+    H(x,t,\psi(t))
+    =\max_{u\in U}\{\inner{f(x,u)}{\psi(t)}+e^{-\rho t}g(x,u)\}.
+\end{equation}
+
+\section*{二、最优性的充分条件（Достаточное условие оптимальности）}
+
+一种标准的\term{充分条件}{достаточное условие}如下。若满足：
+
+\begin{enumerate}
+    \item \term{状态集合}{множество состояний} $G$ 是\term{凸的}{выпукло}；
+    \item 对每个 $t\ge 0$，函数
+    \begin{equation}
+        x\mapsto H(x,t,\psi(t))
+    \end{equation}
+    在 $G$ 上是\term{凹的}{вогнута}；
+    \item 对任意\term{可行轨道}{допустимая траектория} $x(\cdot)$，满足无穷远处的\term{极限条件}{условие на бесконечности}：
+    \begin{equation}
+        \liminf_{t\to\infty}\inner{\psi(t)}{x(t)-x^*(t)}\ge 0;
+    \end{equation}
+\end{enumerate}
+
+则可行对 $(x^*,u^*)$ 是\term{最优的}{оптимальная}。
+
+\section*{三、证明思路（Идея доказательства）}
+
+由\term{最大值条件}{условие максимума}有：
+\begin{equation}
+    H(x^*(t),t,u^*(t),\psi(t))
+    =H(x^*(t),t,\psi(t)).
+\end{equation}
+
+由于 $H$ 关于 $x$ 具有\term{凹性}{вогнутость}，可得一阶估计：
+\begin{equation}
+\begin{aligned}
+    &H(x(t),t,\psi(t))-H(x^*(t),t,\psi(t))\\
+    &\qquad\le
+    \inner{H_x(x^*(t),t,\psi(t))}{x(t)-x^*(t)}.
+\end{aligned}
+\end{equation}
+
+结合\term{伴随方程}{сопряженное уравнение}，可以推出：
+\begin{equation}
+    J_T(x,u)-J_T(x^*,u^*)
+    \le
+    -\inner{\psi(T)}{x(T)-x^*(T)},
+\end{equation}
+其中
+\begin{equation}
+    J_T(x,u)=\int_0^T e^{-\rho t}g(x(t),u(t))\,dt.
+\end{equation}
+
+令 $T\to\infty$，并利用无穷远处的条件（условие на бесконечности），得到：
+\begin{equation}
+    J(x,u)\le J(x^*,u^*).
+\end{equation}
+
+因此，$(x^*,u^*)$ 是最优的。
+
+\end{document}
