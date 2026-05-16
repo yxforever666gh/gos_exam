@@ -3,3 +3,4 @@ $build/
 *.log
 *.out
 *.toc
+*.pdf
